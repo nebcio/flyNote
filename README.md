@@ -7,7 +7,7 @@ Spis treści:
 + [Wygląd](#wyglad)
 
 ## Opis
-Aplikacja do tworzenia notatek na pulpicie realizowana przy pomocy Qt 5.12.
+Aplikacja do tworzenia notatek na pulpicie realizowana przy pomocy Qt 5.12. 
 
 ## Aktualnie
 Praca nad klasą odpowiedzialną za okienko notatki i funkcją okna głównego do tworzenia podokna.
@@ -34,6 +34,8 @@ W tej chwili nie ma możliwości kompilacji, ponieważ jeszcze nie ukończyłam 
   * wybranie dżwięku
 * tworzenie nowej notatki
   * podpięcie pod główne okno zamykania, usuwania
+* zamknięcie notatki
+  * zapytanie o zapis, autozapis
 * zapisanie nowej notatki
   * aktualizacja listy plików w głównym oknie
   * edycja flynotes.json
@@ -45,12 +47,14 @@ W tej chwili nie ma możliwości kompilacji, ponieważ jeszcze nie ukończyłam 
   * i mniejsze podpowiedzi
 * skalowaność
   * ustawienie domyślnego, minimalnego, maksymalnego rozmiaru
+  * obsługa rozszerzania okna
 * wyświetlanie na wierzchu
 * przezroczystość
 * zarządzanie podoknami przez główne okno
   * nieprzechowywanie zamkniętych notatek
+* 
 
 ## Wygląd
-Strona główna:
-![image](https://user-images.githubusercontent.com/73241633/138764379-4dd270b9-101b-4dc3-9feb-d4246548fe3a.png)
+Strona główna (pasek tytułu [minimalizacja, zamykanie aplikacji], lista, pasek przycisków [otwieranie, zamykanie otwrtych, usuwanie, nowa i kontrolka pomocy]:
 
+![image](https://user-images.githubusercontent.com/73241633/138764379-4dd270b9-101b-4dc3-9feb-d4246548fe3a.png)
