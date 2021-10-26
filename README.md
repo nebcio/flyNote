@@ -16,7 +16,7 @@ Praca nad klasą odpowiedzialną za okienko notatki i funkcją okna głównego d
 W tej chwili nie ma możliwości kompilacji, ponieważ jeszcze nie ukończyłam tworzenia podokien.
 
 ## Plan
-09.11 mechanizm otwierania podokna
++ 09.11 mechanizm otwierania podokna
 16.11 zamykanie okna (kooperacja z oknem głównym)
 23.11 zapisywanie notatek i ich usuwanie
 30.11 skalowanie okien
