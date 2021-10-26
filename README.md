@@ -2,6 +2,7 @@
 Spis treści:
 + [Opis](#opis)
 + [Aktualnie](#aktualnie)
++ [Plan](#plan)
 + [Zrealizowane](#zrealizowane)
 + [Do realizacji](#do-realizacji)
 + [Wygląd](#wyglad)
@@ -13,6 +14,17 @@ Aplikacja do tworzenia notatek na pulpicie realizowana przy pomocy Qt 5.12.
 Praca nad klasą odpowiedzialną za okienko notatki i funkcją okna głównego do tworzenia podokna.
 
 W tej chwili nie ma możliwości kompilacji, ponieważ jeszcze nie ukończyłam tworzenia podokien.
+
+## Plan
+09.11 mechanizm otwierania podokna
+16.11 zamykanie okna (kooperacja z oknem głównym)
+23.11 zapisywanie notatek i ich usuwanie
+30.11 skalowanie okien
+07.12 style (czcionka i czerwony)
+14.12 wstępne połączenie z kalendarzem (pobieranie daty i porównywanie)
+30.12 wysłanie powiadomienia
+11.01 prototyp
+do 25.02 drobne poprawy
 
 ## Zrealizowane
 * plik stylu (domyślny niebieski)
