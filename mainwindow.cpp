@@ -13,6 +13,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
     init_connects();
     files();
+    selected_files = new QVector<QListWidgetItem*>;
+    children_window = new QVector<QWidget*>;
 }
 
 MainWindow::~MainWindow() {
@@ -20,10 +22,11 @@ MainWindow::~MainWindow() {
     delete saving_shortcut;
     delete children_window;
     delete selected_files;
+    delete decrease_shortcut;
+    delete increase_shortcut;
 }
 
 void MainWindow::init_connects() {
-    // connect
     saving_shortcut = new QShortcut(QKeySequence::Save, this, SLOT(save_opened()));
     connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(select_file(QListWidgetItem*)));
     connect(ui->button_open, SIGNAL(clicked()), this, SLOT(open_selected()));
@@ -55,16 +58,15 @@ void MainWindow::files() {
 
 void MainWindow::select_file(QListWidgetItem *item){
     /* Managing selection items from list */
-    if (selected_files->size() == 0) {
-        selected_files->append(*item);
+    if (selected_files->empty()) {
+        selected_files->push_back(item);
         item->setSelected(true);
     }
     else {
         int repeated;
         bool if_it_is_in_list = false;
-
         for (int i = 0; i < selected_files->size(); i++) {      // przechodzi przez wybrane i sprawdza czy aktualnie klikniety sie nie powtarza
-            if (item->text() == selected_files->at(i).text()) { // daj do osobnej funkcji !!!!
+            if (item->text() == selected_files->at(i)->text()) { // daj do osobnej funkcji !!!!
                 if_it_is_in_list = true;
                 repeated = i;
             }
@@ -75,7 +77,7 @@ void MainWindow::select_file(QListWidgetItem *item){
             item->setSelected(false);
         }
         else {
-            selected_files->append(*item);
+            selected_files->push_back(item);
             item->setSelected(true);
         }
     }
@@ -83,18 +85,29 @@ void MainWindow::select_file(QListWidgetItem *item){
 
 void MainWindow::open_selected() {
     /* Open selected notes */
-    for (QListWidgetItem &item : *selected_files) {
-        create_new(get_key(item.text()));
-        item.setSelected(false);
+    for (QListWidgetItem *item : *selected_files) {
+        int i = 0;
+        while (item->text() != names_files.value(names_files.keys().at(i)).toString()){
+            i++;
+        }
+        QString tmp_path = names_files.keys().at(i);
+        QString *path = &tmp_path;
+        create_new(path);
+        item->setSelected(false);
     }
     selected_files->clear();
 }
 
 void MainWindow::delete_selected() {
     /* Delete selected notes */
-    for (QListWidgetItem &item : *selected_files){
-        QString name = item.text();
-        QString *path = get_key(name);
+    for (QListWidgetItem *item : *selected_files){
+        QString name = item->text();
+        int i = 0;
+        while (name == names_files.value(names_files.keys().at(i)).toString()){
+            i++;
+        }
+        QString tmp_path = names_files.keys().at(i);
+        QString *path = &tmp_path;
         QFile file_item(*path);
 
         if (file_item.exists()) {
@@ -105,7 +118,7 @@ void MainWindow::delete_selected() {
             names_files.remove(*path);
         }
 
-        item.setSelected(false);
+        item->setSelected(false);
     }
     selected_files->clear();
 
@@ -121,23 +134,19 @@ void MainWindow::delete_selected() {
 
 void MainWindow::create_new(QString *path) {
     if (path == nullptr) {
-        children_window->append(flyNote());
+        children_window->push_back(new flyNote());
     }
     else if (path != nullptr) {
-        children_window->append(flyNote(path));
+        children_window->push_back(new flyNote(nullptr, *path));
     }
-    // zabezpieczenie przed pustym by nie bylo undefined behavior
-        connect(children_window->back(), SIGNAL(signal_create_new(QString*)), this, SLOT(create_new(QString*)));
-    /*
-        self.children_window[-1].new.connect(self._new)
-        self.children_window[-1].deleted.connect(self._remove_closed)
-        self.children_window[-1].update_list.connect(self._files)
 
-        self.save.connect(self.children_window[-1]._save)
-        self.trash.connect(self.children_window[-1]._to_trash)
-        self.close.connect(self.children_window[-1]._close)
+    children_window->back()->show();            // zabezpieczenie przed pustym by nie bylo undefined behavior
+    connect(this, SIGNAL(signal_close()), children_window->back(), SLOT(close_note()));
+    connect(this, SIGNAL(signal_save()), children_window->back(), SLOT(save_note()));
 
-        self.children_window[-1].show()*/
+    connect(children_window->back(), SIGNAL(signal_create_new(QString*)), this, SLOT(create_new(QString*)));
+    connect(children_window->back(), SIGNAL(signal_delete_me()), this, SLOT(update_data()));
+    connect(children_window->back(), SIGNAL(signal_update_list()), this, SLOT(files()));
 }
 
 void MainWindow::save_opened() {
@@ -152,13 +161,4 @@ void MainWindow::close_opened() {
 
 void MainWindow::update_data() {
 
-}
-
-QString* MainWindow::get_key(QString name){
-    for (QString &key : names_files.keys()){
-        if (name == names_files.value(key).toString()){
-            return &key;
-        }
-    }
-    return nullptr;
 }

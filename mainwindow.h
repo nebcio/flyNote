@@ -16,8 +16,8 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow {
     Q_OBJECT
 private:
-    QVector<QWidget> *children_window;
-    QVector<QListWidgetItem> *selected_files;
+    QVector<QWidget*> *children_window;
+    QVector<QListWidgetItem*> *selected_files;
     QShortcut *saving_shortcut;
     QShortcut *increase_shortcut;
     QShortcut *decrease_shortcut;
@@ -25,8 +25,7 @@ private:
 
     Ui::MainWindow *ui;
     void init_connects();
-    void update_data(); // remove closed
-    QString* get_key(QString name);
+    //const QString* get_key(QString name);
 
 private slots:
     void files();
@@ -36,6 +35,7 @@ private slots:
     void create_new(QString *path=nullptr);
     void save_opened();
     void close_opened();
+    void update_data(); // remove closed
 
 signals:
     void signal_close();

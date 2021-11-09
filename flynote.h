@@ -16,15 +16,15 @@ private:
     QString path;
     // shortcut
     void init_connects();
-    bool moving;
+    bool moving=false;
     QPoint startMovePos;
 
 public:
-    explicit flyNote(QWidget *parent = nullptr);
+    explicit flyNote(QWidget *parent = nullptr, QString path=nullptr);
     ~flyNote();
 
 signals:
-    void signal_create_new();
+    void signal_create_new(QString*);
     void signal_delete_me();
     void signal_update_list();
 
@@ -34,7 +34,7 @@ private slots:
     void fly_set();
     void delete_note();
     void create_new(); // potrzeba?
-    void opacity_set();
+    void opacity_set(int a);
     void save_note();
     void ask_to_save();
     void save_and_close();
