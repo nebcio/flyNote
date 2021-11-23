@@ -11,9 +11,7 @@ Spis treści:
 Aplikacja do tworzenia notatek na pulpicie realizowana przy pomocy Qt 5.12. 
 
 ## Aktualnie
-Praca nad klasą odpowiedzialną za okienko notatki i funkcją okna głównego do tworzenia podokna.
-
-W tej chwili nie ma możliwości kompilacji, ponieważ jeszcze nie ukończyłam tworzenia podokien.
+Tworzenie nowych notatek jest możliwe i zapisywanie. Bez usuwania. Przy zamknięciu zapisanej notatki wyłącza program (?)
 
 ## Plan
 + 09.11 mechanizm otwierania podokna
