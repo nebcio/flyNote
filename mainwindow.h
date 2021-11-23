@@ -8,6 +8,7 @@
 #include <QShortcut>
 #include <QObject>
 #include <QJsonObject>
+#include "flynote.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,7 +17,7 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow {
     Q_OBJECT
 private:
-    QVector<QWidget*> *children_window;
+    QVector<flyNote*> *children_window;
     QVector<QListWidgetItem*> *selected_files;
     QShortcut *saving_shortcut;
     QShortcut *increase_shortcut;
@@ -35,7 +36,8 @@ private slots:
     void create_new(QString *path=nullptr);
     void save_opened();
     void close_opened();
-    void update_data(); // remove closed
+    void update_data(); // reload list
+    void clean_data(QString name); // remove closed
 
 signals:
     void signal_close();

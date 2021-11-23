@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     init_connects();
     files();
     selected_files = new QVector<QListWidgetItem*>;
-    children_window = new QVector<QWidget*>;
+    children_window = new QVector<flyNote*>;
 }
 
 MainWindow::~MainWindow() {
@@ -145,7 +145,7 @@ void MainWindow::create_new(QString *path) {
     connect(this, SIGNAL(signal_save()), children_window->back(), SLOT(save_note()));
 
     connect(children_window->back(), SIGNAL(signal_create_new(QString*)), this, SLOT(create_new(QString*)));
-    connect(children_window->back(), SIGNAL(signal_delete_me()), this, SLOT(update_data()));
+    connect(children_window->back(), SIGNAL(signal_delete_me()), this, SLOT(clean_data()));
     connect(children_window->back(), SIGNAL(signal_update_list()), this, SLOT(files()));
 }
 
@@ -159,6 +159,16 @@ void MainWindow::close_opened() {
     emit signal_close();
 }
 
+void MainWindow::clean_data(QString name){
+    /*QVector<flyNote*>::iterator pos = s;
+    *children_window->erase(
+                std::remove_if(*children_window->begin(),
+                               *children_window->end(),
+                               [name](flyNote* i){ return i->get_name() == name; }));*/
+
+}
+
 void MainWindow::update_data() {
+    // trzeba rozdzielić update zamknietych i usunietych/zapisanych
 
 }
