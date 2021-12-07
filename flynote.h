@@ -27,18 +27,22 @@ private:
     QString path;
     QShortcut *saving_shortcut;
     void init_connects();
-    bool moving=false;
-    QPoint startMovePos;
+    bool moving = false;
+    bool resizing = false;
+    QPoint start_pos;
+    int start_x;
+    int start_y;
     AskerWindow* ask_for_save;
+    QString style = "blue";
 
 public:
-    explicit flyNote(QWidget *parent = nullptr, QString path=nullptr);
+    explicit flyNote(QWidget *parent = nullptr, QString path=nullptr, QString style="blue");
     ~flyNote();
     QString get_name();
 
 signals:
     void signal_create_new(QString*);
-    void signal_delete_me();
+    void signal_delete_me(QString);
     void signal_update_list();
 
 private slots:
@@ -48,9 +52,10 @@ private slots:
     void delete_note();
     void create_new(); // potrzeba?
     void opacity_set(int a);
-    void save_note();
+    bool save_note();
     void ask_to_save();
     void save_and_close();
+    void switch_style(QString style);
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;

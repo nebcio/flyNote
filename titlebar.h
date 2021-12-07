@@ -28,6 +28,7 @@ private:
     void init_connects();
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
 
 signals:
     void signal_exit(); // exit //
@@ -36,6 +37,7 @@ signals:
 protected slots:
     void on_button_exit_clicked();
     void on_button_min_clicked(); // minimized
+    void switch_style(QString style);
 
 public:
     explicit TitleBar(QWidget *parent = nullptr);

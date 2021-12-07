@@ -13,7 +13,7 @@ signals:
     void signal_quit();
 
 public:
-    explicit AskerWindow(QWidget *parent = nullptr);
+    explicit AskerWindow(QWidget *parent = nullptr, QString style="blue");
     ~AskerWindow();
 
 private slots:
@@ -24,6 +24,7 @@ private:
     QLabel* question;
     QPushButton* just_quit;
     QPushButton* save_note;
+    QFrame* frame;
 
 
 };
