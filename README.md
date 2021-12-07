@@ -13,11 +13,11 @@ Aplikacja do tworzenia notatek na pulpicie realizowana przy pomocy Qt 5.12.
 Tworzenie nowych notatek jest możliwe i zapisywanie. Bez usuwania. Przy zamknięciu zapisanej notatki wyłącza program (?). Dodany przycisk do zmiany stylu (do dopracowania). Możliwa zmiana rozmiaru okien (do poprawy zmiana kursora myszy). 
 
 ## Plan
-+ ~~~09.11 mechanizm otwierania podokna
-+ ~~16.11 zamykanie okna (kooperacja z oknem głównym)
-+ ~~23.11 zapisywanie notatek i ich usuwanie
-+ ~~30.11 skalowanie okien
-+ ~~07.12 style (czcionka i czerwony)
++ ~~~09.11 mechanizm otwierania podokna~~
++ ~~16.11 zamykanie okna (kooperacja z oknem głównym)~~
++ ~~23.11 zapisywanie notatek i ich usuwanie~~
++ ~~30.11 skalowanie okien~~
++ ~~07.12 style (czcionka i czerwony)~~
 + 14.12 wstępne połączenie z kalendarzem (pobieranie daty i porównywanie)
 + 30.12 wysłanie powiadomienia
 + 11.01 prototyp
