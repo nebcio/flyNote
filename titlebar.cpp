@@ -8,33 +8,27 @@
 #include <QGuiApplication>
 
 
-TitleBar::TitleBar(QWidget *parent) : m_parent(parent) {
-
-    init_intefaces();
-    init_connects();
-    //connect(close, SIGNAL(clicked()), parent, SLOT(on_button_close_clicked()));
+TitleBar::TitleBar(MainWindow *parent) : m_parent(parent) {
+    initIntefaces();
+    initConnects();
 }
 
-TitleBar::~TitleBar(){
-    delete m_parent;
-    delete m_title;
-    delete m_exit_button;
-    delete m_min_button;
-    delete layout_h;
-} // ?????? pointers
+TitleBar::~TitleBar(){}
 
-void TitleBar::init_intefaces(){
-    m_title = new QLabel("flyNote");
+void TitleBar::initIntefaces(){
+    m_title = new QLabel("flyNote", this);
     m_title->setProperty("style", "blue");
+    m_title->setProperty("type", "title");
 
-    m_exit_button = new QPushButton();{
+    m_exit_button = new QPushButton(this);{
     m_exit_button->setObjectName("exit_button");
     m_exit_button->setFixedSize(QSize(30, 30));
     m_exit_button->setIcon(QIcon("./img/close.png"));
     m_exit_button->setIconSize(QSize(10, 10));
-    m_exit_button->setProperty("style", "blue");}
+    m_exit_button->setProperty("style", "blue");
+    m_exit_button->setToolTip("Exit");}
 
-    m_min_button = new QPushButton(); {
+    m_min_button = new QPushButton(this); {
     m_min_button->setObjectName("min_button");
     m_min_button->setFixedSize(QSize(30, 30));
     m_min_button->setText("_");
@@ -45,7 +39,8 @@ void TitleBar::init_intefaces(){
     layout_h->addWidget(m_min_button);
     layout_h->addWidget(m_exit_button);
     layout_h->insertStretch(1, 500); // co to xDDD
-    layout_h->setSpacing(0);}
+    layout_h->setSpacing(0);
+    layout_h->setContentsMargins(0,0,0,0);}
 
     QFontDatabase::addApplicationFont("C:/Users/zuzaw/Projekty/flyNote/style/domestic-manners.regular.ttf");
     m_title->setFont(QFont("Domestic Manners"));
@@ -53,24 +48,10 @@ void TitleBar::init_intefaces(){
     setAutoFillBackground(true);
 }
 
-void TitleBar::init_connects() {
-    connect(m_exit_button, SIGNAL(clicked()), this, SLOT(on_button_exit_clicked()));
-    connect(m_min_button, SIGNAL(clicked()), this, SLOT(on_button_min_clicked()));
-
-}
-
-void TitleBar::switch_style(QString style) {
-    m_title->setProperty("style", style);
-    m_title->style()->polish(m_title);
-    m_title->update();
-
-    m_exit_button->setProperty("style", style);
-    m_exit_button->style()->polish(m_exit_button);
-    m_exit_button->update();
-
-    m_min_button->setProperty("style", style);
-    m_min_button->style()->polish(m_min_button);
-    m_min_button->update();
+void TitleBar::initConnects() {
+    connect(m_exit_button, &QPushButton::clicked, this, &TitleBar::onButtonExitClicked);
+    connect(m_min_button, &QPushButton::clicked, this, &TitleBar::onButtonMinClicked);
+    connect(this, SIGNAL(signalUpdateConfig()), m_parent, SLOT(updateConfig()));
 }
 
 void TitleBar::mousePressEvent(QMouseEvent *event) {
@@ -100,15 +81,24 @@ void TitleBar::mouseReleaseEvent(QMouseEvent *event) {
     parent_moving = false;
 }
 
-// moze lepiej?
-void TitleBar::on_button_exit_clicked() {
-    m_parent->close();
+void TitleBar::onButtonExitClicked() {
+    /* Trigger exit */
+    emit signalExit();
 }
-void TitleBar::on_button_min_clicked() {
+void TitleBar::onButtonMinClicked() {
     m_parent->showMinimized();
 }
 
-void TitleBar::saveRestoreInfo(const QPoint point, const QSize size){
-    m_restorePos = point;
-    m_restoreSize = size;
+void TitleBar::setProperties(QString& style) {
+    m_title->setProperty("style", style);
+    m_title->style()->polish(m_title);
+    m_title->update();
+
+    m_exit_button->setProperty("style", style);
+    m_exit_button->style()->polish(m_exit_button);
+    m_exit_button->update();
+
+    m_min_button->setProperty("style", style);
+    m_min_button->style()->polish(m_min_button);
+    m_min_button->update();
 }

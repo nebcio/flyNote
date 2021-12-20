@@ -9,34 +9,108 @@
 #include <QString>
 #include <QVector>
 #include <QMouseEvent>
+#include <QStringLiteral>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    init_connects();
+    loadConfig();
+    initConnects();
     files();
-    selected_files = new QVector<QListWidgetItem*>;
-    children_window = new QVector<flyNote*>; // poczytaj
+}
+
+void MainWindow::loadConfig() {
+    /* Create list of flyNotes */
+    QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
+    QString file_text = "";
+    if (config_file.exists()) {
+        config_file.open(QIODevice::ReadOnly | QIODevice::Text);
+        file_text = config_file.readAll();
+        config_file.close();
+        config = QJsonDocument::fromJson(file_text.toUtf8()).object().find(QString("MainWindow")).value().toObject();   // create object json based on value of file
+    }
+    else { // default config, just for mainwindow
+        const QString init_json(QStringLiteral("{ \"MainWindow\": { \"style\": \"blue\","
+"                                              \"font-size\": 15,"
+"                                              \"x\": 900,"
+"                                              \"y\": 300,"
+"                                              \"width\": 360,"
+"                                              \"height\": 320}}"));
+        config = QJsonObject(QJsonDocument::fromJson(init_json.toUtf8()).object());
+        updateConfig();
+    }
+    setGeometry(config.find(QString("x")).value().toInt(),
+                config.find(QString("y")).value().toInt(),
+                config.find(QString("width")).value().toInt(),
+                config.find(QString("height")).value().toInt());
+
+    font_size = config.find(QString("font-size")).value().toInt();
+    ui->listWidget->setFont(QFont("Arial", font_size));
+
+    if(style != config.find(QString("style")).value().toString()) switchStyle();
+
+}
+
+void MainWindow::updateConfig() {
+    /* Update config file */
+    QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
+    QString file_text = "";
+    QJsonObject all_config;
+    if (config_file.exists()){
+        config_file.open(QIODevice::ReadOnly | QIODevice::Text);
+        file_text = config_file.readAll();
+        config_file.close();
+        all_config = QJsonDocument::fromJson(file_text.toUtf8()).object();   // create object json based on value of file
+    }
+    all_config.insert("MainWindow", config);
+    config_file.open(QIODevice::WriteOnly | QIODevice::Text);
+    config_file.write(QJsonDocument(all_config).toJson());
+    config_file.close();
+
+}
+
+void MainWindow::cleanConfig() {
+    QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
+    QString file_text = "";
+    QJsonObject all_config;
+    if (config_file.exists()) {
+        config_file.open(QIODevice::ReadOnly | QIODevice::Text);
+        file_text = config_file.readAll();
+        config_file.close();
+        all_config = QJsonDocument::fromJson(file_text.toUtf8()).object();   // create object json based on value of file
+        const QStringList configs_keys = all_config.keys();
+        for (QString path : configs_keys) {
+            if (!names_files.contains(path) && path != "MainWindow") {
+                all_config.remove(path);
+            }
+        }
+        config_file.open(QIODevice::WriteOnly | QIODevice::Text);
+        config_file.write(QJsonDocument(all_config).toJson());
+        config_file.close();
+    }
+    else {
+        loadConfig();
+    }
 }
 
 MainWindow::~MainWindow() {
     delete saving_shortcut;
-    delete children_window;
-    delete selected_files;
     delete decrease_shortcut;
     delete increase_shortcut;
     delete ui;
-
 }
 
-void MainWindow::init_connects() {
-    saving_shortcut = new QShortcut(QKeySequence::Save, this, SLOT(save_opened()));
-    connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(select_file(QListWidgetItem*)));
-    connect(ui->button_open, SIGNAL(clicked()), this, SLOT(open_selected()));
-    connect(ui->button_trash, SIGNAL(clicked()), this, SLOT(delete_selected()));
-    connect(ui->button_close, SIGNAL(clicked()), this, SLOT(close_opened()));
-    connect(ui->button_new, SIGNAL(clicked()), this, SLOT(create_new()));
-    connect(ui->button_style, SIGNAL(clicked()), this, SLOT(switch_style()));
-    connect(this, SIGNAL(signal_style(QString)), ui->title_bar, SLOT(switch_style(QString)));
+void MainWindow::initConnects() {
+    connect(ui->button_open, &QPushButton::clicked, this, &MainWindow::openSelected);
+    connect(ui->button_trash, &QPushButton::clicked, this, &MainWindow::deleteSelected);
+    connect(ui->button_close, &QPushButton::clicked, this, &MainWindow::closeOpened);
+    connect(ui->button_new, SIGNAL(clicked()), this, SLOT(createNew()));
+    connect(ui->button_style, &QPushButton::clicked, this, &MainWindow::switchStyle);
+    connect(ui->title_bar, SIGNAL(signalExit()), this, SLOT(exitApp()));
+}
+
+void MainWindow::exitApp() {
+    // przed musi zapisac wszystkie notatki czy cos
+    QCoreApplication::quit();
 }
 
 void MainWindow::files() {
@@ -56,75 +130,35 @@ void MainWindow::files() {
     ui->listWidget->clear();
     for (QString &element : names_files.keys()){
         QListWidgetItem *item = new QListWidgetItem(QString(QJsonValue(names_files.value(element)).toString()));
+        item->setToolTip(QString(element));
         ui->listWidget->addItem(item);
     }
 }
 
-void MainWindow::select_file(QListWidgetItem *item){
-    /* Managing selection items from list */
-    if (selected_files->empty()) {
-        selected_files->push_back(item);
-        item->setSelected(true);
-    }
-    else {
-        int repeated;
-        bool if_it_is_in_list = false;
-        for (int i = 0; i < selected_files->size(); i++) {      // przechodzi przez wybrane i sprawdza czy aktualnie klikniety sie nie powtarza
-            if (item->text() == selected_files->at(i)->text()) { // daj do osobnej funkcji !!!!
-                if_it_is_in_list = true;
-                repeated = i;
-            }
-        }
-
-        if (if_it_is_in_list){
-            selected_files->remove(repeated);
-            item->setSelected(false);
-        }
-        else {
-            selected_files->push_back(item);
-            item->setSelected(true);
-        }
-    }
-}
-
-void MainWindow::open_selected() {
+void MainWindow::openSelected() {
     /* Open selected notes */
-    for (QListWidgetItem *item : *selected_files) {
-        int i = 0;
-        while (item->text() != names_files.value(names_files.keys().at(i)).toString()){
-            i++;
-        }
-        QString tmp_path = names_files.keys().at(i);
-        QString *path = &tmp_path;
-        create_new(path);
+    for(QListWidgetItem *item : ui->listWidget->selectedItems()){
+        QString tmp_path = item->toolTip();
+        createNew(&tmp_path, item->text());
         item->setSelected(false);
     }
-    selected_files->clear();
 }
 
-void MainWindow::delete_selected() {
+void MainWindow::deleteSelected() {
     /* Delete selected notes */
-    for (QListWidgetItem *item : *selected_files){
-        QString name = item->text();
-        int i = 0;
-        while (name == names_files.value(names_files.keys().at(i)).toString()){
-            i++;
-        }
-        QString tmp_path = names_files.keys().at(i);
-        QString *path = &tmp_path;
-        QFile file_item(*path);
+    for(QListWidgetItem *item : ui->listWidget->selectedItems()){
+        QString tmp_path = item->toolTip();
+        QFile file_item(tmp_path);
 
         if (file_item.exists()) {
             file_item.remove();
         }
 
-        if (names_files.keys().contains(*path)){
-            names_files.remove(*path);
+        if (names_files.keys().contains(tmp_path)){
+            names_files.remove(tmp_path);
         }
 
-        item->setSelected(false);
     }
-    selected_files->clear();
 
     QFile flynotes("flynotes.json"); // podobno lepiej QFileInfo, ale to na koniec
     if (flynotes.exists()){
@@ -134,55 +168,66 @@ void MainWindow::delete_selected() {
     }
 
     files();
+    cleanConfig();
 }
 
-void MainWindow::create_new(QString *path) {
-    if (path == nullptr) {
-        children_window->push_back(new flyNote(nullptr, nullptr, style));
+void MainWindow::createNew(QString* path, QString name) {
+    /*if (path == nullptr) {
+        children_window.push_back(new flyNote(nullptr, nullptr, style));
     }
     else if (path != nullptr) {
-        children_window->push_back(new flyNote(nullptr, *path, style));
+        children_window.push_back(new flyNote(nullptr, *path, style));
     }
 
-    children_window->back()->show();            // zabezpieczenie przed pustym by nie bylo undefined behavior
-    connect(this, SIGNAL(signal_close()), children_window->back(), SLOT(close_note()));
-    connect(this, SIGNAL(signal_save()), children_window->back(), SLOT(save_note()));
-    connect(this, SIGNAL(signal_style(QString)), children_window->back(), SLOT(switch_style(QString)));
+    children_window.back()->show();            // zabezpieczenie przed pustym by nie bylo undefined behavior
+    connect(this, SIGNAL(signalClose()), children_window.back(), SLOT(closeNote()));
+    connect(this, SIGNAL(signalSave()), children_window.back(), SLOT(saveNote()));
+    connect(this, SIGNAL(signalStyle(QString&)), children_window.back(), SLOT(switchStyle(QString&)));
 
-    connect(children_window->back(), SIGNAL(signal_create_new(QString*)), this, SLOT(create_new(QString*)));
-    connect(children_window->back(), SIGNAL(signal_delete_me(QString)), this, SLOT(clean_data(QString)));
-    connect(children_window->back(), SIGNAL(signal_update_list()), this, SLOT(files()));
+    connect(children_window.back(), SIGNAL(signalCreateNew(QString*)), this, SLOT(createNew(QString*)));
+    connect(children_window.back(), SIGNAL(signalDeleteMe(QString)), this, SLOT(cleanData(QString)));
+    connect(children_window.back(), SIGNAL(signalUpdateList()), this, SLOT(files()));*/
+
+    flyNote *fN;
+
+    if (path == nullptr) {
+        fN = new flyNote(nullptr, name, nullptr, style); // with default name
+        fN->show();
+        connect(this, SIGNAL(signalClose()), fN, SLOT(closeNote()));
+        connect(this, SIGNAL(signalSave()), fN, SLOT(saveNote()));
+        connect(this, SIGNAL(signalStyle(QString&)), fN, SLOT(switchStyle(QString&)));
+
+        connect(fN, SIGNAL(signalCreateNew(QString*)), this, SLOT(createNew(QString*)));
+        connect(fN, SIGNAL(signalUpdateList()), this, SLOT(files()));
+    }
+    else if (path != nullptr) {
+        fN = new flyNote(nullptr, name, *path, style);
+        fN->show();
+        connect(this, SIGNAL(signalClose()), fN, SLOT(closeNote()));
+        connect(this, SIGNAL(signalSave()), fN, SLOT(saveNote()));
+        connect(this, SIGNAL(signalStyle(QString&)), fN, SLOT(switchStyle(QString&)));
+        connect(this, SIGNAL(signalFontSize(int)), fN, SLOT(updateFontSize(int)));
+
+        connect(fN, SIGNAL(signalCreateNew(QString*)), this, SLOT(createNew(QString*)));
+        connect(fN, SIGNAL(signalUpdateList()), this, SLOT(files()));
+    }
 }
 
-void MainWindow::save_opened() {
+void MainWindow::saveOpened() {
     /* Save opened notes */
-    emit signal_save();
+    emit signalSave();
 }
 
-void MainWindow::close_opened() {
+void MainWindow::closeOpened() {
     /* Close opened notes */
-    emit signal_close();
+    emit signalClose();
 }
 
-void MainWindow::clean_data(QString name){
-    for (int i = 0; i < children_window->size(); i++){
-        if (children_window->at(i)->get_name() == name){
-            children_window->erase(children_window->begin()+i);
-        }
-    }
-
-}
-
-void MainWindow::update_data() {
-    // trzeba rozdzielić update zamknietych i usunietych/zapisanych
-
-}
-
-void MainWindow::switch_style() {
+void MainWindow::switchStyle() {
     if (style == "blue") { style = "red"; }
     else { style = "blue"; }
 
-    emit signal_style(style);
+    emit signalStyle(style);
 
     ui->button_close->setProperty("style", style);
     // ui->button_close->style()->unpolish(ui->button_close);
@@ -215,8 +260,32 @@ void MainWindow::switch_style() {
 
     ui->listWidget->setProperty("style", style);
     ui->listWidget->style()->polish(ui->listWidget);
-    ui->listWidget->update();
+    //ui->listWidget->update();
 
+    ui->title_bar->setProperties(style);
+
+    config.insert("style", QString("%1").arg(style));
+    updateConfig();
+}
+
+void MainWindow::increaseFont(){
+    if (font_size < 35) {
+        ++font_size;
+        ui->listWidget->setFont(QFont("Arial", font_size));
+        config.find(QString("font-size")).value() = font_size;
+        updateConfig();
+        emit signalFontSize(font_size);
+    }
+}
+
+void MainWindow::decreaseFont(){
+    if (font_size > 4) {
+        --font_size;
+        ui->listWidget->setFont(QFont("Arial", font_size));
+        config.find(QString("font-size")).value() = font_size;
+        updateConfig();
+        emit signalFontSize(font_size);
+    }
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
@@ -230,29 +299,40 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
         }
     }
 }
+bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
+    /* Changing shape of cursor on boundaries */
+    if (e->type() == QEvent::MouseMove) {
+        QMouseEvent* event = static_cast<QMouseEvent*>(e);
+
+        const auto main_pos = pos();
+        const auto cur_pos = event->globalPos() - main_pos;
+
+        if ((cur_pos.x() < 10 && cur_pos.y() < 10) || // fdiag ->
+                (cur_pos.x() > width() - 10 && cur_pos.y() > height() - 10)) {
+            setCursor(Qt::SizeFDiagCursor);
+        }
+        else if ((cur_pos.x() < 10 && cur_pos.y() > height() - 10) || // bdiag <-
+                 (cur_pos.y() < 10 && cur_pos.x() > width() - 10)) {
+            setCursor(Qt::SizeBDiagCursor);
+        }
+        else if (cur_pos.x() < 10 || cur_pos.x() > width() - 10 ) { // horyzontal
+            setCursor(Qt::SizeHorCursor);
+        }
+        else if (cur_pos.y() < 10 || cur_pos.y() > height() - 10) { // vertical
+            setCursor(Qt::SizeVerCursor);
+        }
+        else { setCursor(Qt::ArrowCursor);}
+    }
+    return false;
+}
 void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-    if ((event->pos().x() < 10 && event->pos().y() < 10) || // fdiag ->
-        (event->pos().x() > width() - 10 && event->pos().y() > height() - 10)) {
-        setCursor(Qt::SizeFDiagCursor);
-    }
-    else if ((event->pos().x() < 10 && event->pos().y() > height() - 10) || // bdiag <-
-             (event->pos().y() < 10 && event->pos().x() > width() - 10)) {
-        setCursor(Qt::SizeBDiagCursor);
-    }
-    else if (event->pos().x() < 10 || event->pos().x() > width() - 10) { // horyzontal
-        setCursor(Qt::SizeHorCursor);
-    }
-    else if (event->pos().y() < 10 || event->pos().y() > height() - 10) { // vertical
-        setCursor(Qt::SizeVerCursor);
-    }
-    else { setCursor(Qt::ArrowCursor);}
 
     if (resizing) {
-        if (start_x < 10 && start_y < 10){ // lewy gorny rog
-            int new_width = width() - event->globalX() + pos().x();
-            int new_height = height() - event->globalY() + pos().y();
+        if (start_x < 10 && start_y < 10){                              // top-left
+            const int new_width = width() - event->globalX() + pos().x();
+            const int new_height = height() - event->globalY() + pos().y();
 
-            // obsluga zmiany szerokosci
+            // changing width
             if (new_width < minimumSize().width()){
                 setGeometry(pos().x(), pos().y(), minimumSize().width(), height());
             }
@@ -263,7 +343,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
                 setGeometry(event->globalX(), pos().y(), new_width, height());
             }
 
-            // obsluga zmiany wysokosci
+            // changing height
             if (new_height < minimumSize().height()){
                 setGeometry(pos().x(), pos().y(), width(), minimumSize().height());
             }
@@ -273,13 +353,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
             else {
                 setGeometry(pos().x(), event->globalY(), width(), new_height);
             }
-
         }
-        else if (start_x < 10 && start_y > height() - 10) { // lewy dolny
-            int new_width = width() - event->globalX() + pos().x();
-            int new_height = height() + event->globalY() - start_pos.y();
-            int delta_y = height() - start_y;
+        else if (start_x < 10 && start_y > height() - 10) {             // bottom-left
+            const int new_width = width() - event->globalX() + pos().x();
+            const int new_height = height() + event->globalY() - start_pos.y();
+            const int delta_y = height() - start_y;
 
+            // changing width
             if (new_width < minimumSize().width()){
                 setGeometry(pos().x(), pos().y(), minimumSize().width(), height());
             }
@@ -290,7 +370,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
                 setGeometry(event->globalX(), pos().y(), new_width, height());
             }
 
-            // obsluga zmiany wysokosci
+            // changing height
             if (new_height < minimumSize().height()){
                 setGeometry(pos().x(), pos().y(), width(), minimumSize().height());
             }
@@ -300,15 +380,17 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
             else {
                 setGeometry(pos().x(), pos().y(), width(), new_height);
             }
+
+            // update new pos to variables
             start_y = height() - delta_y;
             start_pos.setY(event->globalY());
         }
-        else if (start_x > width() - 10 && start_y < 10) { // prawy gorny
+        else if (start_x > width() - 10 && start_y < 10) {              // top-right
             int new_width = width() + event->globalX() - start_pos.x();
             int new_height = height() - event->globalY() + pos().y();
             int delta_x = width() - start_x;
 
-            // obsluga zmiany szerokosci
+            // changing width
             if (new_width < minimumSize().width()){
                 setGeometry(pos().x(), pos().y(), minimumSize().width(), height());
             }
@@ -318,10 +400,12 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
             else {
                 setGeometry(pos().x(), pos().y(), new_width, height());
             }
+
+            // update new pos to variables
             start_x = width() - delta_x;
             start_pos.setX(event->globalX());
 
-            // obsluga zmiany wysokosci
+            // changing height
             if (new_height < minimumSize().height()){
                 setGeometry(pos().x(), pos().y(), width(), minimumSize().height());
             }
@@ -333,37 +417,43 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
             }
 
         }
-        else if (start_x > width() - 10 && start_y > height() - 10){ // prawy dolny
-            int new_width = width() + event->globalX() - start_pos.x();
-            int new_height = height() + event->globalY() - start_pos.y();
-            int delta_x = width() - start_x, delta_y = height() - start_y;
+        else if (start_x > width() - 10 && start_y > height() - 10){    // bottom-right
+            const int new_width = width() + event->globalX() - start_pos.x();
+            const int new_height = height() + event->globalY() - start_pos.y();
+            const int delta_x = width() - start_x, delta_y = height() - start_y;
 
+            // changing width and height
             setGeometry(pos().x(), pos().y(), new_width, new_height);
+
+            // update new pos to variables
             start_x = width() - delta_x;
             start_y = height() - delta_y;
             start_pos = event->globalPos();
         }
-        else if (start_x > width() - 10) {
-            int new_width = width() + event->globalX() - start_pos.x();
-            int delta_x = width() - start_x;
+        else if (start_x > width() - 10) {                              // right
+            const int new_width = width() + event->globalX() - start_pos.x();
+            const int delta_x = width() - start_x;
 
+            // changing width
             if (new_width < minimumSize().width()){
                 setGeometry(pos().x(), pos().y(), minimumSize().width(), height());
             }
             else if (new_width > maximumSize().width()) {
-                qDebug() << "here";
                 setGeometry(pos().x(), pos().y(), maximumSize().width(), height());
             }
             else {
                 setGeometry(pos().x(), pos().y(), new_width, height());
             }
+
+            // update new pos to variables
             start_x = width() - delta_x;
             start_pos.setX(event->globalX());
         }
-        else if (start_y > height() - 10) {
-            int new_height = height() + event->globalY() - start_pos.y();
-            int delta_y = height() - start_y;
-            // obsluga zmiany wysokosci
+        else if (start_y > height() - 10) {                             // bottom
+            const int new_height = height() + event->globalY() - start_pos.y();
+            const int delta_y = height() - start_y;
+
+            // changing height
             if (new_height < minimumSize().height()){
                 setGeometry(pos().x(), pos().y(), width(), minimumSize().height());
             }
@@ -373,12 +463,15 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
             else {
                 setGeometry(pos().x(), pos().y(), width(), new_height);
             }
+
+            // update new pos to variables
             start_y = height() - delta_y;
             start_pos.setY(event->globalY());
         }
-        else if (start_x < 10) {
-            int new_width = width() - event->globalX() + pos().x();
+        else if (start_x < 10) {                                        // left
+            const int new_width = width() - event->globalX() + pos().x();
 
+            // changing width
             if (new_width < minimumSize().width()){
                 setGeometry(pos().x(), pos().y(), minimumSize().width(), height());
             }
@@ -389,9 +482,10 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
                 setGeometry(event->globalX(), pos().y(), new_width, height());
             }
         }
-        else if (start_y < 10) { //
-            int new_height = height() - event->globalY() + pos().y();
-            // obsluga zmiany wysokosci
+        else if (start_y < 10) {                                        // top
+            const int new_height = height() - event->globalY() + pos().y();
+
+            // changing height
             if (new_height < minimumSize().height()){
                 setGeometry(pos().x(), pos().y(), width(), minimumSize().height());
             }
@@ -405,5 +499,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
+    /* End of resizing */
     resizing = false;
+
+    config.insert("width", width());
+    config.insert("height", height());
+    config.insert("x", pos().x());
+    config.insert("y", pos().y());
+    updateConfig();
+
 }

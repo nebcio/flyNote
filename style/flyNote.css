@@ -1,6 +1,5 @@
 QTextEdit, QMessageBox, QLabel, QWidget, QListWidget{
     background: #202021;
-    font-size: 15px;
     color: #999;
  }
 
@@ -19,11 +18,18 @@ QScrollBar:handle {
 QScrollBar:vertical {
      background-color: #2b2a2a;
      width: 15px;
-     margin: 15px 3px 15px 3px;
+     margin: 15px 0px 15px 6px;
      border-radius: 4px;
  }
 
-QScrollBar:sub-line:vertical, QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical:hover, QScrollBar::sub-line:vertical:on {
+QScrollBar:horizontal {
+     background-color: #2b2a2a;
+     height: 15px;
+     margin: 6px 15px 0px 15px;
+     border-radius: 4px;
+ }
+
+QScrollBar:sub-line:vertical, QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical:hover, QScrollBar::sub-line:vertical:on, QScrollBar::add-line:horizontal, QScrollBar:sub-line:horizontal, QScrollBar::sub-line:horizontal:hover, QScrollBar::sub-line:horizontal:on {
      height: 0px;
      width: 0px;
      subcontrol-position: none;
@@ -52,14 +58,39 @@ QScrollBar:handle:pressed {
      background: #363636;
  }
 
-/* blue */
+QLabel[type="status"] {
+    font-size: 13px;
+    color: #666;
+ }
 
-QToolTip[style="blue"] {
-    border: 1px solid #004e52;
+QToolTip {
+    border: 1px solid #333;
+    padding: 2px;
     border-radius: 4px;
     background: #272729;
     color: #999;
-    font-size: 15px;
+ }
+
+QListWidget::item:selected {
+    background: #232325;
+    color: #bbb;
+ }
+
+QCheckBox::indicator {
+    width: 10px;
+    height: 10px;
+ }
+
+QPushButton {
+    background: #333;
+    margin: 1px;
+ }
+
+/* blue */
+
+QLabel[type="status"][style="blue"] {
+    border-top: 1px solid #004e52;
+    border-right: 1px solid #004e52;
  }
 
 QFrame[style="blue"] {
@@ -67,9 +98,7 @@ QFrame[style="blue"] {
 }
 
 QListWidget::item:selected[style="blue"] {
-    background: #232325;
     border-left: 3px solid #257c81;
-    color: #bbb;
  }
 
 QCheckBox[style="blue"] {
@@ -79,25 +108,19 @@ QCheckBox[style="blue"] {
 QCheckBox::indicator[style="blue"] {
     border: 1px solid #136a67;
     color: #146b70;
-    width: 10px;
-    height: 10px;
  }
 
 QCheckBox::indicator:checked[style="blue"] {
     border: 1px solid #136a67;
     color: #146b70;
-    image: url(./img/tick.png);
+    image: url(./img/tick_b.png);
  }
 
 QPushButton[style="blue"] {
     border: 1px solid #146b70;
-    background: #333;
-    width: 30px;
-    height: 30px;
-    margin: 1px;
  }
 
-QLabel[style="blue"] {
+QLabel[type="title"][style="blue"] {
     color: #146b70;
     font-size: 30px;
  }
@@ -108,12 +131,9 @@ QSlider[style="blue"]::groove:horizontal {
 
 /* red */
 
-QToolTip[style="red"] {
-    border: 1px solid #AF2222;
-    border-radius: 4px;
-    background: #272729;
-    color: #999;
-    font-size: 15px;
+QLabel[type="status"][style="red"] {
+    border-top: 1px solid #AF2222;
+    border-right: 1px solid #AF2222;
  }
 
 QFrame[style="red"] {
@@ -121,9 +141,7 @@ QFrame[style="red"] {
 }
 
 QListWidget::item:selected[style="red"] {
-    background: #232325;
     border-left: 3px solid #B61919;
-    color: #bbb;
  }
 
 QCheckBox[style="red"] {
@@ -133,25 +151,19 @@ QCheckBox[style="red"] {
 QCheckBox::indicator[style="red"] {
     border: 1px solid #6C1313;
     color: #AB3D3D;
-    width: 10px;
-    height: 10px;
  }
 
 QCheckBox::indicator:checked[style="red"] {
     border: 1px solid #AF2222;
     color: #AB3D3D;
-    image: url(./img/tick.png);
+    image: url(./img/tick_r.png);
  }
 
 QPushButton[style="red"] {
     border: 1px solid #AF2222;
-    background: #333;
-    width: 30px;
-    height: 30px;
-    margin: 1px;
  }
 
-QLabel[style="red"] {
+QLabel[type="title"][style="red"] {
     color: #AF2222;
     font-size: 30px;
  }

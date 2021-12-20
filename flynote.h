@@ -11,8 +11,10 @@
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QJsonDocument>
-#include "askerwindow.h"
 #include <QShortcut>
+#include <QMouseEvent>
+#include <QDateTime>
+#include "askerwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class flyNote; }
@@ -22,43 +24,61 @@ class flyNote : public QWidget
 {
     Q_OBJECT
 private:
+    const QShortcut *saving_shortcut = new QShortcut(QKeySequence::Save, this, SLOT(saveNote()));
     Ui::flyNote *ui;
+
     QString name;
     QString path;
-    QShortcut *saving_shortcut;
-    void init_connects();
+
     bool moving = false;
     bool resizing = false;
+
+    QJsonObject config;
+    int font_size = 15;
     QPoint start_pos;
     int start_x;
     int start_y;
-    AskerWindow* ask_for_save;
     QString style = "blue";
 
+    QDateTime time_notification;
+
+    AskerWindow* m_ask_for_save;
+
+
 public:
-    explicit flyNote(QWidget *parent = nullptr, QString path=nullptr, QString style="blue");
+    explicit flyNote(QWidget *parent = nullptr, QString name="flyNote –", QString path=nullptr, QString style="blue");
     ~flyNote();
-    QString get_name();
 
 signals:
-    void signal_create_new(QString*);
-    void signal_delete_me(QString);
-    void signal_update_list();
+    void signalCreateNew(QString*);
+    void signalDeleteMe(QString);
+    void signalUpdateList();
 
 private slots:
-    void load_note(); // _open
-    void close_note();
-    void fly_set(int a);
-    void delete_note();
-    void create_new(); // potrzeba?
-    void opacity_set(int a);
-    bool save_note();
-    void ask_to_save();
-    void save_and_close();
-    void switch_style(QString style);
+    void initConnects();
+    void loadNote();
+    void closeNote();
+    void flySet(int a);
+    void deleteNote();
+    void createNew();
+    void opacitySet(int a);
+    bool saveNote();
+    void askToSave();
+    void saveClose();
+
+    void compareTime();
+    void setTimeNotification();
+    void sendNotification();
+
+    void loadConfig();
+    void updateConfig();
+    void updateFontSize(int f);
+    void switchStyle(QString& style);
+
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *e) override;
 };
 
 #endif // FLYNOTE_H

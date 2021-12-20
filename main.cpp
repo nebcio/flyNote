@@ -8,6 +8,7 @@
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     app.setStyle("Fusion");
+
     QFile styles("C:/Users/zuzaw/Projekty/flyNote/style/flyNote.css");
     styles.open(QIODevice::ReadOnly);
     app.setStyleSheet(styles.readAll());
@@ -24,6 +25,7 @@ int main(int argc, char *argv[]) {
     }
 
     MainWindow w;
+    app.installEventFilter(&w);
     w.show();
     return app.exec();
 }

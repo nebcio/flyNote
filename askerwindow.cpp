@@ -18,13 +18,13 @@ AskerWindow::AskerWindow(QWidget *parent, QString style) : QWidget(parent) {
     save_note->setGeometry(100, 40, 45, 25);
     save_note->setText("Save");
     save_note->setProperty("style", style);}
-    connect(save_note, SIGNAL(clicked()), this, SLOT(save_parent()));
+    connect(save_note, &QPushButton::clicked, this, &AskerWindow::saveParent);
 
     just_quit = new QPushButton(this);{
     just_quit->setGeometry(150, 40, 45, 25);
     just_quit->setText("Quit");
     just_quit->setProperty("style", style);}
-    connect(just_quit, SIGNAL(clicked()), this, SLOT(close_parent()));
+    connect(just_quit, &QPushButton::clicked, this, &AskerWindow::closeParent);
 
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
@@ -37,13 +37,13 @@ AskerWindow::~AskerWindow(){
     delete just_quit;
 }
 
-void AskerWindow::save_parent(){
-    emit signal_save();
+void AskerWindow::saveParent(){
+    emit signalSave();
     close();
 }
 
-void AskerWindow::close_parent(){
-    emit signal_quit();
+void AskerWindow::closeParent(){
+    emit signalQuit();
     close();
 }
 

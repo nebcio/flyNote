@@ -12,38 +12,37 @@ class TitleBar : public QWidget {
     Q_OBJECT
 
 private:
-    QWidget *m_parent;
-    //QLabel *m_icon;
+    MainWindow *m_parent;
     QLabel *m_title;
     QPushButton *m_exit_button;
     QPushButton *m_min_button;
     QHBoxLayout *layout_h;
+
     QPoint m_restorePos;    // maximize and minimize variables;
     QSize m_restoreSize;
 
     bool parent_moving;
     QPoint m_startMovePos;
 
-    void init_intefaces();
-    void init_connects();
+    void initIntefaces();
+    void initConnects();
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
 
 signals:
-    void signal_exit(); // exit //
-    void signal_min();
+    void signalExit();
+    void signalMin();
+    void signalUpdateConfig();
 
 protected slots:
-    void on_button_exit_clicked();
-    void on_button_min_clicked(); // minimized
-    void switch_style(QString style);
+    void onButtonExitClicked();
+    void onButtonMinClicked(); // minimized
 
 public:
-    explicit TitleBar(QWidget *parent = nullptr);
+    explicit TitleBar(MainWindow *parent = nullptr);
     ~TitleBar();
-
-    void saveRestoreInfo(const QPoint point, const QSize size); // Save/Get the position and size of the window before maximizing;
+    void setProperties(QString& style);
 };
 
 #endif // TITLEBAR_H

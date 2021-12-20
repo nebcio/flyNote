@@ -9,16 +9,16 @@ class AskerWindow : public QWidget
 {
     Q_OBJECT
 signals:
-    void signal_save();
-    void signal_quit();
+    void signalSave();
+    void signalQuit();
 
 public:
     explicit AskerWindow(QWidget *parent = nullptr, QString style="blue");
     ~AskerWindow();
 
 private slots:
-    void close_parent();
-    void save_parent();
+    void closeParent();
+    void saveParent();
 
 private:
     QLabel* question;
