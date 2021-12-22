@@ -78,7 +78,7 @@ void MainWindow::cleanConfig() {
         config_file.close();
         all_config = QJsonDocument::fromJson(file_text.toUtf8()).object();   // create object json based on value of file
         const QStringList configs_keys = all_config.keys();
-        for (QString path : configs_keys) {
+        for (const QString path : configs_keys) {
             if (!names_files.contains(path) && path != "MainWindow") {
                 all_config.remove(path);
             }
@@ -111,6 +111,7 @@ void MainWindow::initConnects() {
 void MainWindow::exitApp() {
     // przed musi zapisac wszystkie notatki czy cos
     QCoreApplication::quit();
+    //hide();
 }
 
 void MainWindow::files() {
@@ -151,6 +152,7 @@ void MainWindow::deleteSelected() {
         QFile file_item(tmp_path);
 
         if (file_item.exists()) {
+            emit signalCloseBeforeDeleting(tmp_path);
             file_item.remove();
         }
 
@@ -207,9 +209,11 @@ void MainWindow::createNew(QString* path, QString name) {
         connect(this, SIGNAL(signalSave()), fN, SLOT(saveNote()));
         connect(this, SIGNAL(signalStyle(QString&)), fN, SLOT(switchStyle(QString&)));
         connect(this, SIGNAL(signalFontSize(int)), fN, SLOT(updateFontSize(int)));
+        connect(this, SIGNAL(signalCloseBeforeDeleting(QString)), fN, SLOT(closeBeforeDeleting(QString)));
 
         connect(fN, SIGNAL(signalCreateNew(QString*)), this, SLOT(createNew(QString*)));
         connect(fN, SIGNAL(signalUpdateList()), this, SLOT(files()));
+        connect(fN, SIGNAL(signalCleanConfig()), this, SLOT(cleanConfig()));
     }
 }
 
@@ -230,37 +234,36 @@ void MainWindow::switchStyle() {
     emit signalStyle(style);
 
     ui->button_close->setProperty("style", style);
-    // ui->button_close->style()->unpolish(ui->button_close);
+    ui->button_close->style()->unpolish(ui->button_close);
     ui->button_close->style()->polish(ui->button_close);
-    ui->button_close->update();
 
     ui->button_open->setProperty("style", style);
+    ui->button_open->style()->unpolish(ui->button_open);
     ui->button_open->style()->polish(ui->button_open);
-    ui->button_open->update();
 
     ui->button_help->setProperty("style", style);
+    ui->button_help->style()->unpolish(ui->button_help);
     ui->button_help->style()->polish(ui->button_help);
-    ui->button_help->update();
 
     ui->button_style->setProperty("style", style);
+    ui->button_style->style()->unpolish(ui->button_style);
     ui->button_style->style()->polish(ui->button_style);
-    ui->button_style->update();
 
     ui->button_trash->setProperty("style", style);
+    ui->button_trash->style()->unpolish(ui->button_trash);
     ui->button_trash->style()->polish(ui->button_trash);
-    ui->button_trash->update();
 
     ui->button_new->setProperty("style", style);
+    ui->button_new->style()->unpolish(ui->button_new);
     ui->button_new->style()->polish(ui->button_new);
-    ui->button_new->update();
 
     ui->line->setProperty("style", style);
+    ui->line->style()->unpolish(ui->line);
     ui->line->style()->polish(ui->line);
-    ui->line->update();
 
     ui->listWidget->setProperty("style", style);
+    ui->listWidget->style()->unpolish(ui->listWidget);
     ui->listWidget->style()->polish(ui->listWidget);
-    //ui->listWidget->update();
 
     ui->title_bar->setProperties(style);
 

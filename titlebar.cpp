@@ -91,14 +91,14 @@ void TitleBar::onButtonMinClicked() {
 
 void TitleBar::setProperties(QString& style) {
     m_title->setProperty("style", style);
+    m_title->style()->unpolish(m_title);
     m_title->style()->polish(m_title);
-    m_title->update();
 
     m_exit_button->setProperty("style", style);
+    m_exit_button->style()->unpolish(m_exit_button);
     m_exit_button->style()->polish(m_exit_button);
-    m_exit_button->update();
 
     m_min_button->setProperty("style", style);
+    m_min_button->style()->unpolish(m_min_button);
     m_min_button->style()->polish(m_min_button);
-    m_min_button->update();
 }

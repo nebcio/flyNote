@@ -38,7 +38,7 @@ private:
     QPoint start_pos;
     int start_x;
     int start_y;
-    QString style = "blue";
+    QString style = "blue"; // for dialog window
 
     QDateTime time_notification;
 
@@ -53,6 +53,7 @@ signals:
     void signalCreateNew(QString*);
     void signalDeleteMe(QString);
     void signalUpdateList();
+    void signalCleanConfig();
 
 private slots:
     void initConnects();
@@ -65,6 +66,7 @@ private slots:
     bool saveNote();
     void askToSave();
     void saveClose();
+    void closeBeforeDeleting(QString some_path);
 
     void compareTime();
     void setTimeNotification();

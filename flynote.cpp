@@ -42,7 +42,8 @@ void flyNote::loadConfig() {
 "                                               \"width\": 360,"
 "                                               \"height\": 320,"
 "                                               \"fly\": false,"
-"                                               \"opacity\": 255}"));
+"                                               \"opacity\": 255,"
+"                                               \"timeNotification\": \"\"}"));
         config = QJsonObject(QJsonDocument::fromJson(init_json.toUtf8()).object());
     }
 
@@ -84,6 +85,7 @@ void flyNote::updateFontSize(int f) {
 
 void flyNote::compareTime() {
     qDebug() << "Notification! Time: " << QDateTime::currentDateTime();
+
 }
 
 void flyNote::setTimeNotification() {
@@ -137,7 +139,52 @@ void flyNote::flySet(int a) {
 }
 
 void flyNote::deleteNote() {
+    /* Delete selected notes */
+    QFile file(path);
 
+    if (file.exists()) {
+        file.remove();
+    }
+
+    QFile flynotes("flynotes.json"); // podobno lepiej QFileInfo, ale to na koniec
+    QString file_text = "";
+    QJsonObject files;
+    if (flynotes.exists()){
+        if(flynotes.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            file_text = flynotes.readAll();
+            flynotes.close();
+        }
+
+        files = QJsonDocument::fromJson(file_text.toUtf8()).object();   // create object json based on value of file
+        files.remove(path);
+
+        if(flynotes.open(QIODevice::WriteOnly | QIODevice::Text)){
+            flynotes.write(QJsonDocument(files).toJson());
+        }
+        flynotes.close();
+
+    }
+
+    QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
+    file_text = "";
+    if (config_file.exists()) {
+        if (config_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            file_text = config_file.readAll();
+        }
+        config_file.close();
+
+        files = QJsonDocument::fromJson(file_text.toUtf8()).object() ;// (QString(path);
+        files.remove(path);
+
+        if(config_file.open(QIODevice::WriteOnly | QIODevice::Text)){
+            config_file.write(QJsonDocument(files).toJson());
+        }
+        config_file.close();
+    }
+
+    emit signalCleanConfig();
+    emit signalUpdateList();
+    close();
 }
 
 void flyNote::createNew() {
@@ -202,6 +249,9 @@ bool flyNote::saveNote() {
             flynotes.write(QJsonDocument(files).toJson());
         }
         flynotes.close();
+
+        updateConfig();
+        emit signalUpdateList();
     }
     return true;
 }
@@ -212,41 +262,47 @@ void flyNote::saveClose() {
     close();
 }
 
+void flyNote::closeBeforeDeleting(QString some_path) {
+    if (path == some_path) {
+        close();
+    }
+}
+
 void flyNote::switchStyle(QString& style) {
     /* Update interface to given style */
     this->style = style;
+
     ui->button_close->setProperty("style", style);
-    // ui->button_close->style()->unpolish(ui->button_close);
+    ui->button_close->style()->unpolish(ui->button_close);
     ui->button_close->style()->polish(ui->button_close);
-    ui->button_close->update();
 
     ui->slider_opacity->setProperty("style", style);
+    ui->slider_opacity->style()->unpolish(ui->slider_opacity);
     ui->slider_opacity->style()->polish(ui->slider_opacity);
-    ui->slider_opacity->update();
 
     ui->button_calendar->setProperty("style", style);
+    ui->button_calendar->style()->unpolish(ui->button_calendar);
     ui->button_calendar->style()->polish(ui->button_calendar);
-    ui->button_calendar->update();
 
     ui->button_trash->setProperty("style", style);
+    ui->button_trash->style()->unpolish(ui->button_trash);
     ui->button_trash->style()->polish(ui->button_trash);
-    ui->button_trash->update();
 
     ui->button_new->setProperty("style", style);
+    ui->button_new->style()->unpolish(ui->button_new);
     ui->button_new->style()->polish(ui->button_new);
-    ui->button_new->update();
 
     ui->line->setProperty("style", style);
+    ui->line->style()->unpolish(ui->line);
     ui->line->style()->polish(ui->line);
-    ui->line->update();
 
     ui->checkbox_fly->setProperty("style", style);
+    ui->checkbox_fly->style()->unpolish(ui->checkbox_fly);
     ui->checkbox_fly->style()->polish(ui->checkbox_fly);
-    ui->checkbox_fly->update();
 
     ui->status_bar->setProperty("style", style);
+    ui->status_bar->style()->unpolish(ui->status_bar);
     ui->status_bar->style()->polish(ui->status_bar);
-    ui->status_bar->update();
 }
 
 void flyNote::mousePressEvent(QMouseEvent *event) {
@@ -479,5 +535,6 @@ void flyNote::mouseReleaseEvent(QMouseEvent *event) {
     config.insert("height", height());
     config.insert("x", pos().x());
     config.insert("y", pos().y());
+    config.insert("timeNotification", QDateTime::currentDateTime().toString());
     updateConfig();
 }

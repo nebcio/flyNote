@@ -64,6 +64,7 @@ signals:
     void signalStyle(QString& style);
     void signalCloseApp();
     void signalFontSize(int f);
+    void signalCloseBeforeDeleting(QString path);
 
 public:
     MainWindow(QWidget *parent = nullptr);
