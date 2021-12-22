@@ -10,7 +10,7 @@ Spis treści:
 Aplikacja do tworzenia notatek na pulpicie realizowana przy pomocy Qt 5.12. 
 
 ## Aktualnie
-Tworzenie nowych notatek jest możliwe i zapisywanie. Bez usuwania. Przy zamknięciu zapisanej notatki wyłącza program (?). Dodany przycisk do zmiany stylu (do dopracowania). Możliwa zmiana rozmiaru okien (do poprawy zmiana kursora myszy). 
+Tworzenie nowych notatek jest możliwe, tak jak zapisywanie i usuwanie. Na bieżąco zapisywana jest też konfiguracja. Dodany przycisk do zmiany stylu (do dopracowania). Możliwa zmiana rozmiaru okien. Aktualnie brak znalezionych błędów. Do optymalizacji. 
 
 ## Plan
 + ~~~09.11 mechanizm otwierania podokna~~
@@ -18,39 +18,40 @@ Tworzenie nowych notatek jest możliwe i zapisywanie. Bez usuwania. Przy zamkni�
 + ~~23.11 zapisywanie notatek i ich usuwanie~~
 + ~~30.11 skalowanie okien~~
 + ~~07.12 style (czcionka i czerwony)~~
-+ 14.12 wstępne połączenie z kalendarzem (pobieranie daty i porównywanie)
++ ~~14.12 wstępne połączenie z kalendarzem (pobieranie daty i porównywanie)~~
 + 30.12 wysłanie powiadomienia
 + 11.01 prototyp
 + do 25.02 drobne poprawy
 
 ## Do realizacji:
-* regulacja czcionki
-  * obsługa skrótów (Ctrl + / Ctrl -) 
+* ~~regulacja czcionki~~
+  * ~~obsługa skrótów (Ctrl + / Ctrl -) ~~
 * otwieranie notatek
   * zapobieganie otwierania tej samej notatki kilka razy
-  * odznacznie listy po otworzeniu 
-* dwa style kolorystyczne
-  * umożliwienie zmiany i interfejsu umożliwiającego zmianę 
+  * ~~odznacznie listy po otworzeniu ~~
+* ~~dwa style kolorystyczne~~
+  * ~~umożliwienie zmiany i interfejsu umożliwiającego zmianę ~~
 * przypomnienia
   * obsługa kalendarza
   * wybranie dżwięku
-* tworzenie nowej notatki
-  * podpięcie pod główne okno zamykania, usuwania
-* zamknięcie notatki
-  * zapytanie o zapis, autozapis
-* zapisanie nowej notatki
-  * aktualizacja listy plików w głównym oknie
-  * edycja flynotes.json
-* usuwanie notatek
-  * grupowo i pojedyńczo 
-  * edycja flynotes.json
-  * aktualizacja listy plików w głównym oknie 
+* ~~tworzenie nowej notatki~~
+  * ~~podpięcie pod główne okno zamykania, usuwania~~
+* ~~zamknięcie notatki
+  * ~~zapytanie o zapis, autozapis~~
+  * zamykanie bez zapisu za pomocą skrótu
+* ~~zapisanie nowej notatki~~
+  * ~~aktualizacja listy plików w głównym oknie~~
+  * ~~edycja flynotes.json~~
+* ~~usuwanie notatek~~
+  * ~~grupowo i pojedyńczo ~~
+  * ~~edycja flynotes.json~~
+  * ~~aktualizacja listy plików w głównym oknie ~~
 * pomoc (segment interfejsu, gdzie o najechaniu wyświetla się panej ze wskazówkami)
   * i mniejsze podpowiedzi
-* wyświetlanie na wierzchu
-* przezroczystość
-* zarządzanie podoknami przez główne okno
-  * nieprzechowywanie zamkniętych notatek
+*  ~~wyświetlanie na wierzchu ~~
+*  ~~przezroczystość ~~
+*  ~~zarządzanie podoknami przez główne okno ~~
+  *  ~~nieprzechowywanie zamkniętych notatek ~~
 * 
 
 ## Wygląd
