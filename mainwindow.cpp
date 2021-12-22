@@ -13,20 +13,29 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
+
     loadConfig();
     initConnects();
     files();
 }
 
+MainWindow::~MainWindow() {
+    delete saving_shortcut;
+    delete decrease_shortcut;
+    delete increase_shortcut;
+    delete ui;
+}
+
 void MainWindow::loadConfig() {
-    /* Create list of flyNotes */
+    /* Generate or get config for mainwindow */
+
     QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
     QString file_text = "";
     if (config_file.exists()) {
         config_file.open(QIODevice::ReadOnly | QIODevice::Text);
         file_text = config_file.readAll();
         config_file.close();
-        config = QJsonDocument::fromJson(file_text.toUtf8()).object().find(QString("MainWindow")).value().toObject();   // create object json based on value of file
+        config = QJsonDocument::fromJson(file_text.toUtf8()).object().find(QString("MainWindow")).value().toObject();
     }
     else { // default config, just for mainwindow
         const QString init_json(QStringLiteral("{ \"MainWindow\": { \"style\": \"blue\","
@@ -38,6 +47,7 @@ void MainWindow::loadConfig() {
         config = QJsonObject(QJsonDocument::fromJson(init_json.toUtf8()).object());
         updateConfig();
     }
+
     setGeometry(config.find(QString("x")).value().toInt(),
                 config.find(QString("y")).value().toInt(),
                 config.find(QString("width")).value().toInt(),
@@ -51,7 +61,8 @@ void MainWindow::loadConfig() {
 }
 
 void MainWindow::updateConfig() {
-    /* Update config file */
+    /* Update config file (config of mainwidnow) */
+
     QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
     QString file_text = "";
     QJsonObject all_config;
@@ -61,14 +72,18 @@ void MainWindow::updateConfig() {
         config_file.close();
         all_config = QJsonDocument::fromJson(file_text.toUtf8()).object();   // create object json based on value of file
     }
+
+    // put configs for mainwindow to config object
     all_config.insert("MainWindow", config);
     config_file.open(QIODevice::WriteOnly | QIODevice::Text);
     config_file.write(QJsonDocument(all_config).toJson());
     config_file.close();
-
 }
 
 void MainWindow::cleanConfig() {
+    /* Clen config file from deleted selected notes
+       if file does not exist, set default again (loadConfig() */
+
     QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
     QString file_text = "";
     QJsonObject all_config;
@@ -92,14 +107,9 @@ void MainWindow::cleanConfig() {
     }
 }
 
-MainWindow::~MainWindow() {
-    delete saving_shortcut;
-    delete decrease_shortcut;
-    delete increase_shortcut;
-    delete ui;
-}
-
 void MainWindow::initConnects() {
+    /* Init connecting signals and slots */
+
     connect(ui->button_open, &QPushButton::clicked, this, &MainWindow::openSelected);
     connect(ui->button_trash, &QPushButton::clicked, this, &MainWindow::deleteSelected);
     connect(ui->button_close, &QPushButton::clicked, this, &MainWindow::closeOpened);
@@ -116,6 +126,7 @@ void MainWindow::exitApp() {
 
 void MainWindow::files() {
     /* Create list of flyNotes */
+
     QFile flynotes("flynotes.json"); // podobno lepiej QFileInfo, ale to na koniec
     QString file_text = "";
     if (flynotes.exists()){
@@ -137,7 +148,8 @@ void MainWindow::files() {
 }
 
 void MainWindow::openSelected() {
-    /* Open selected notes */
+    /* Open selected notes taking path from tip */
+
     for(QListWidgetItem *item : ui->listWidget->selectedItems()){
         QString tmp_path = item->toolTip();
         createNew(&tmp_path, item->text());
@@ -146,7 +158,8 @@ void MainWindow::openSelected() {
 }
 
 void MainWindow::deleteSelected() {
-    /* Delete selected notes */
+    /* Delete selected notes, save changes, clean config, reload data */
+
     for(QListWidgetItem *item : ui->listWidget->selectedItems()){
         QString tmp_path = item->toolTip();
         QFile file_item(tmp_path);
@@ -174,21 +187,7 @@ void MainWindow::deleteSelected() {
 }
 
 void MainWindow::createNew(QString* path, QString name) {
-    /*if (path == nullptr) {
-        children_window.push_back(new flyNote(nullptr, nullptr, style));
-    }
-    else if (path != nullptr) {
-        children_window.push_back(new flyNote(nullptr, *path, style));
-    }
-
-    children_window.back()->show();            // zabezpieczenie przed pustym by nie bylo undefined behavior
-    connect(this, SIGNAL(signalClose()), children_window.back(), SLOT(closeNote()));
-    connect(this, SIGNAL(signalSave()), children_window.back(), SLOT(saveNote()));
-    connect(this, SIGNAL(signalStyle(QString&)), children_window.back(), SLOT(switchStyle(QString&)));
-
-    connect(children_window.back(), SIGNAL(signalCreateNew(QString*)), this, SLOT(createNew(QString*)));
-    connect(children_window.back(), SIGNAL(signalDeleteMe(QString)), this, SLOT(cleanData(QString)));
-    connect(children_window.back(), SIGNAL(signalUpdateList()), this, SLOT(files()));*/
+    /* Create new note, or open saved */
 
     flyNote *fN;
 
@@ -218,16 +217,20 @@ void MainWindow::createNew(QString* path, QString name) {
 }
 
 void MainWindow::saveOpened() {
-    /* Save opened notes */
+    /* Emit signal: save opened notes */
+
     emit signalSave();
 }
 
 void MainWindow::closeOpened() {
-    /* Close opened notes */
+    /* Emit signal: close opened notes */
+
     emit signalClose();
 }
 
 void MainWindow::switchStyle() {
+    /* Switch style red->blue, blue->red, emit change, update widgets */
+
     if (style == "blue") { style = "red"; }
     else { style = "blue"; }
 
@@ -272,6 +275,8 @@ void MainWindow::switchStyle() {
 }
 
 void MainWindow::increaseFont(){
+    /* Increase size of font, update widgate, config and emit change to notes */
+
     if (font_size < 35) {
         ++font_size;
         ui->listWidget->setFont(QFont("Arial", font_size));
@@ -282,6 +287,8 @@ void MainWindow::increaseFont(){
 }
 
 void MainWindow::decreaseFont(){
+    /* Decrease size of font, update widgate, config and emit change to notes */
+
     if (font_size > 4) {
         --font_size;
         ui->listWidget->setFont(QFont("Arial", font_size));
@@ -292,6 +299,8 @@ void MainWindow::decreaseFont(){
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
+    /* Responsible for start resizing */
+
     if (event->buttons() == Qt::LeftButton){
         if (event->pos().x() < 10 || event->pos().x() > width() - 10 ||
             event->pos().y() < 10 || event->pos().y() > height() - 10) {
@@ -304,6 +313,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
 }
 bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
     /* Changing shape of cursor on boundaries */
+
     if (e->type() == QEvent::MouseMove) {
         QMouseEvent* event = static_cast<QMouseEvent*>(e);
 
@@ -329,7 +339,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
     return false;
 }
 void MainWindow::mouseMoveEvent(QMouseEvent *event) {
-
+    /* Resizing */
     if (resizing) {
         if (start_x < 10 && start_y < 10){                              // top-left
             const int new_width = width() - event->globalX() + pos().x();
@@ -502,7 +512,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
-    /* End of resizing */
+    /* End of resizing, save config */
     resizing = false;
 
     config.insert("width", width());

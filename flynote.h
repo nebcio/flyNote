@@ -51,7 +51,6 @@ public:
 
 signals:
     void signalCreateNew(QString*);
-    void signalDeleteMe(QString);
     void signalUpdateList();
     void signalCleanConfig();
 
@@ -65,7 +64,6 @@ private slots:
     void opacitySet(int a);
     bool saveNote();
     void askToSave();
-    void saveClose();
     void closeBeforeDeleting(QString some_path);
 
     void compareTime();

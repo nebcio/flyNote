@@ -21,10 +21,10 @@ private slots:
     void saveParent();
 
 private:
-    QLabel* question;
-    QPushButton* just_quit;
-    QPushButton* save_note;
-    QFrame* frame;
+    QLabel* m_question;
+    QPushButton* m_just_quit;
+    QPushButton* m_save_note;
+    QFrame* m_frame;
 
 
 };

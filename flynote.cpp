@@ -3,12 +3,14 @@
 
 flyNote::flyNote(QWidget *parent,  QString name, QString path_, QString style_) : QWidget(parent),  ui(new Ui::flyNote), path(path_) { // heh heh
     ui->setupUi(this, style_);
+    ui->status_bar->setText(name);
     installEventFilter(this);
+
     if (path != nullptr) loadNote();
     style = style_;
+
     initConnects();
     loadConfig();
-    ui->status_bar->setText(QString(name));
     compareTime();
 }
 
@@ -18,6 +20,8 @@ flyNote::~flyNote() {
 }
 
 void flyNote::initConnects(){
+    /* Init connecting signals and slots */
+
     connect(ui->button_new, &QPushButton::clicked, this, &flyNote::createNew);
     connect(ui->button_trash, &QPushButton::clicked, this, &flyNote::deleteNote);
     connect(ui->button_close, &QPushButton::clicked, this, &flyNote::closeNote);
@@ -26,17 +30,21 @@ void flyNote::initConnects(){
 }
 
 void flyNote::loadConfig() {
-    /* Create list of flyNotes */
-    QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
+    /* Get from file or generate config for note and set parameters */
+
+    QFile config_file("config.json");
     QString file_text = "";
+
     config_file.open(QIODevice::ReadOnly | QIODevice::Text);
     file_text = config_file.readAll();
     config_file.close();
+
     font_size = QJsonDocument::fromJson(file_text.toUtf8()).object().find(QString("MainWindow")).value().toObject().find(QString("font-size")).value().toInt();
-    if (QJsonDocument::fromJson(file_text.toUtf8()).object().contains(path)){
-        config = QJsonDocument::fromJson(file_text.toUtf8()).object().find(QString(path)).value().toObject();   // create object json based on value of file
+
+    if (QJsonDocument::fromJson(file_text.toUtf8()).object().contains(path)){ // checking if config is in file
+        config = QJsonDocument::fromJson(file_text.toUtf8()).object().find(QString(path)).value().toObject();
     }
-    else { // default config, just for mainwindow
+    else { // generate config
         const QString init_json(QStringLiteral("{ \"x\": 900,"
 "                                               \"y\": 300,"
 "                                               \"width\": 360,"
@@ -47,39 +55,48 @@ void flyNote::loadConfig() {
         config = QJsonObject(QJsonDocument::fromJson(init_json.toUtf8()).object());
     }
 
+    // setting x, y, width and height
     setGeometry(config.find(QString("x")).value().toInt(),
                 config.find(QString("y")).value().toInt(),
                 config.find(QString("width")).value().toInt(),
                 config.find(QString("height")).value().toInt());
 
+    // setting opacity
     ui->slider_opacity->setValue(config.find(QString("opacity")).value().toDouble());
 
+    // setting fly, only if true (diffrent from default)
     if (config.find(QString("fly")).value().toBool() == true) {
         ui->checkbox_fly->setChecked(true);
     }
 
-    ui->text_space->setFont(QFont("Arial", font_size));
+    // setting font size
+    updateFontSize(font_size);
 }
 
 void flyNote::updateConfig() {
     /* Update config file */
-    QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
+
+    QFile config_file("config.json");
     QString file_text = "";
     QJsonObject all_config;
     if (config_file.exists()){
-        config_file.open(QIODevice::ReadOnly | QIODevice::Text);
+
+        // read file and get object
+        config_file.open(QIODevice::ReadOnly | QIODevice::Text); {
         file_text = config_file.readAll();
         config_file.close();
-        all_config = QJsonDocument::fromJson(file_text.toUtf8()).object();   // create object json based on value of file
+        all_config = QJsonDocument::fromJson(file_text.toUtf8()).object(); }
 
-        all_config.insert(QString(path), config);
+        // update object and write file
+        all_config.insert(QString(path), config); {
         config_file.open(QIODevice::WriteOnly | QIODevice::Text);
         config_file.write(QJsonDocument(all_config).toJson());
-        config_file.close();
+        config_file.close(); }
     }
 }
 
 void flyNote::updateFontSize(int f) {
+    /* Set font size, only for note content */
     ui->text_space->setFont(QFont("Arial", f));
 }
 
@@ -97,8 +114,9 @@ void flyNote::sendNotification() {
 }
 
 void flyNote::loadNote() {
-    /* Open note, only main window can call it. Read non latin characters
+    /* Open note. Read non latin characters
      * only if file is encoding in UTF-8 or UTF-8 BOM */
+
     QFile note(path);
 
     // in.setCodec("UTF-8"); // UTF-8 is default
@@ -112,19 +130,17 @@ void flyNote::loadNote() {
 }
 
 void flyNote::closeNote() {
-    /* Close note */
-    if (path == nullptr){
-        askToSave();
-    }
-    else {
-        if(saveNote()){
-            emit signalDeleteMe(name);
-            close();}
-    }
+    /* Closing with path: save and close
+       Without: ask to save, save and close or close */
+
+    if (path == nullptr) askToSave();
+    else if(saveNote()) close();
 }
 
 void flyNote::flySet(int a) {
-    /* Enable/Disable WindowStaysOnTopHint flag */
+    /* Enable/Disable WindowStaysOnTopHint flag
+       Call update config file and show changes */
+
     if (a == 2) {
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
         config.insert("fly", true);
@@ -139,14 +155,17 @@ void flyNote::flySet(int a) {
 }
 
 void flyNote::deleteNote() {
-    /* Delete selected notes */
-    QFile file(path);
+    /* Delete note, update flynotes.json and config.json
+       Call update List of notes, and close note */
 
+    // Remove file if exists
+    QFile file(path);
     if (file.exists()) {
         file.remove();
     }
 
-    QFile flynotes("flynotes.json"); // podobno lepiej QFileInfo, ale to na koniec
+    // Read, remove data, write flynotes.json
+    QFile flynotes("flynotes.json");
     QString file_text = "";
     QJsonObject files;
     if (flynotes.exists()){
@@ -155,17 +174,17 @@ void flyNote::deleteNote() {
             flynotes.close();
         }
 
-        files = QJsonDocument::fromJson(file_text.toUtf8()).object();   // create object json based on value of file
+        files = QJsonDocument::fromJson(file_text.toUtf8()).object();
         files.remove(path);
 
         if(flynotes.open(QIODevice::WriteOnly | QIODevice::Text)){
             flynotes.write(QJsonDocument(files).toJson());
         }
         flynotes.close();
-
     }
 
-    QFile config_file("config.json"); // podobno lepiej QFileInfo, ale to na koniec
+    // Read, remove data, write config.json
+    QFile config_file("config.json");
     file_text = "";
     if (config_file.exists()) {
         if (config_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -182,38 +201,48 @@ void flyNote::deleteNote() {
         config_file.close();
     }
 
-    emit signalCleanConfig();
     emit signalUpdateList();
     close();
 }
 
 void flyNote::createNew() {
+    /* Emit signal to MainWindow to create new empty note */
+
     emit signalCreateNew(nullptr);
 }
 
 void flyNote::opacitySet(int a) {
-    /* Set the opacity of window between 30 and 255(100% visible) */
+    /* Set the opacity of window between 30 and 255(100% visible)
+       Update config (file) */
+
     setWindowOpacity(a / 255.0);
     config.insert("opacity", windowOpacity() * 255.0);
     updateConfig();
 }
 
 void flyNote::askToSave() {
+    /* Create new window, connects two events
+       save and close or close */
+
     m_ask_for_save = new AskerWindow(nullptr, style);
+
     connect(m_ask_for_save, &AskerWindow::signalSave, [this]() {
         saveNote();
-        emit signalDeleteMe(name);
         close();
     });
+
     connect(m_ask_for_save, &AskerWindow::signalQuit, [this](){
-        emit signalDeleteMe(name);
         close();
     });
 }
 
 bool flyNote::saveNote() {
-    if (path != nullptr) {
-        QFile note(path); // podobno lepiej QFileInfo, ale to na koniec
+    /* Save note with path or open QFileDialog
+     * to choose location and name file
+     * and save note */
+
+    if (path != nullptr) { // with path
+        QFile note(path);
 
         if (note.exists()){
             note.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -222,24 +251,30 @@ bool flyNote::saveNote() {
             note.close();
         }
     }
-    else if (path == nullptr){
+    else if (path == nullptr){ // without path
         path = QFileDialog::getSaveFileName(this, tr("Save as..."), tr("flynote.txt"), tr("*.txt"));
-        QFile note(path);
+
+        // get name note
         QFileInfo notr(path);
         name = notr.baseName();
+        ui->status_bar->setText(name);
+
+        // save note
+        QFile note(path);
         note.open(QIODevice::WriteOnly | QIODevice::Text);
         QTextStream out(&note);
         out << ui->text_space->toPlainText();
         note.close();
 
-        QFile flynotes("flynotes.json"); // podobno lepiej QFileInfo, ale to na koniec
+        // save path to note
+        QFile flynotes("flynotes.json");
         QString file_text = "";
         QJsonObject files;
         if (flynotes.exists()){
             flynotes.open(QIODevice::ReadOnly | QIODevice::Text);
             file_text = flynotes.readAll();
             flynotes.close();
-            files = QJsonDocument::fromJson(file_text.toUtf8()).object();   // create object json based on value of file
+            files = QJsonDocument::fromJson(file_text.toUtf8()).object();
         }
         else {
             files = QJsonObject();                                 // empty json object
@@ -256,20 +291,15 @@ bool flyNote::saveNote() {
     return true;
 }
 
-void flyNote::saveClose() {
-    saveNote();
-    emit signalDeleteMe(name);
-    close();
-}
-
 void flyNote::closeBeforeDeleting(QString some_path) {
-    if (path == some_path) {
-        close();
-    }
+    /* Compare deleted path with this path, close it the same */
+
+    if (path == some_path) close();
 }
 
 void flyNote::switchStyle(QString& style) {
     /* Update interface to given style */
+
     this->style = style;
 
     ui->button_close->setProperty("style", style);
@@ -306,6 +336,8 @@ void flyNote::switchStyle(QString& style) {
 }
 
 void flyNote::mousePressEvent(QMouseEvent *event) {
+    /* Responsible for start resizing and movement */
+
     if(event->button() == Qt::LeftButton){
         if (event->pos().x() < 10 || event->pos().x() > width() - 10 ||
                 event->pos().y() < 10 || event->pos().y() > height() - 10) { // resize
@@ -322,6 +354,7 @@ void flyNote::mousePressEvent(QMouseEvent *event) {
 }
 bool flyNote::eventFilter(QObject *obj, QEvent *e) {
     /* Changing shape of cursor on boundaries */
+
     if (e->type() == QEvent::MouseMove) {
         QMouseEvent* event = static_cast<QMouseEvent*>(e);
 
@@ -347,7 +380,8 @@ bool flyNote::eventFilter(QObject *obj, QEvent *e) {
     return false;
 }
 void flyNote::mouseMoveEvent(QMouseEvent *event) {
-    /* Changing shape of cursor on boundaries */
+    /* Moving event or resizing */
+
     // moving and resizing
     if(moving){
         setCursor(Qt::SizeAllCursor);
@@ -527,6 +561,8 @@ void flyNote::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 void flyNote::mouseReleaseEvent(QMouseEvent *event) {
+    /* End of moving and resizing, save config */
+
     moving = false;
     resizing = false;
     setCursor(Qt::ArrowCursor); // return do default cursor after moving
@@ -535,6 +571,6 @@ void flyNote::mouseReleaseEvent(QMouseEvent *event) {
     config.insert("height", height());
     config.insert("x", pos().x());
     config.insert("y", pos().y());
-    config.insert("timeNotification", QDateTime::currentDateTime().toString());
+    config.insert("timeNotification", QDateTime::currentDateTime().toString()); // nie bd tego
     updateConfig();
 }
