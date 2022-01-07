@@ -14,12 +14,14 @@ SOURCES += \
     flynote.cpp \
     main.cpp \
     mainwindow.cpp \
+    panelinputtime.cpp \
     titlebar.cpp
 
 HEADERS += \
     askerwindow.h \
     flynote.h \
     mainwindow.h \
+    panelinputtime.h \
     titlebar.h \
     ui_flynote.h \
     ui_mainwindow.h

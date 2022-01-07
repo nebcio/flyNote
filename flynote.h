@@ -14,7 +14,10 @@
 #include <QShortcut>
 #include <QMouseEvent>
 #include <QDateTime>
+#include <QCursor>
+#include <QTimer>
 #include "askerwindow.h"
+#include "panelinputtime.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class flyNote; }
@@ -41,6 +44,8 @@ private:
     QString style = "blue"; // for dialog window
 
     QDateTime time_notification;
+    bool panel_opened = false;
+    QTimer* timer;
 
     AskerWindow* m_ask_for_save;
 
@@ -53,6 +58,7 @@ signals:
     void signalCreateNew(QString*);
     void signalUpdateList();
     void signalCleanConfig();
+    void signalclosePanelTime();
 
 private slots:
     void initConnects();
@@ -66,8 +72,9 @@ private slots:
     void askToSave();
     void closeBeforeDeleting(QString some_path);
 
+    void showPanelTime();
     void compareTime();
-    void setTimeNotification();
+    void setTimeNotification(QDateTime date_time);
     void sendNotification();
 
     void loadConfig();

@@ -27,6 +27,21 @@ void flyNote::initConnects(){
     connect(ui->button_close, &QPushButton::clicked, this, &flyNote::closeNote);
     connect(ui->checkbox_fly, &QCheckBox::stateChanged, this, &flyNote::flySet);
     connect(ui->slider_opacity, &QSlider::valueChanged, this, &flyNote::opacitySet);
+    connect(ui->button_calendar, &QPushButton::clicked, this, &flyNote::showPanelTime);
+}
+
+void flyNote::showPanelTime() {
+    if (!panel_opened) {
+        PanelInputTime* panel = new PanelInputTime(style, QCursor::pos().x(), QCursor::pos().y(), nullptr);
+        connect(this, &flyNote::signalclosePanelTime, panel, [panel](){ panel->close();});
+        connect(panel, &PanelInputTime::signalSetNotification, this, &flyNote::setTimeNotification);
+        panel_opened = !panel_opened;
+    }
+    else {
+        emit signalclosePanelTime();
+        panel_opened = !panel_opened;
+    }
+
 }
 
 void flyNote::loadConfig() {
@@ -101,11 +116,27 @@ void flyNote::updateFontSize(int f) {
 }
 
 void flyNote::compareTime() {
-    qDebug() << "Notification! Time: " << QDateTime::currentDateTime();
+    QDateTime date = QDateTime::currentDateTime();
+    if (date.date() == time_notification.date() &&
+        date.time().hour() == time_notification.time().hour() &&
+        date.time().minute() == time_notification.time().minute()) {
+        qDebug() << "Notification! Time stop. ";
+        timer->stop();
+        qDebug() << "Timer: " << timer->isActive();
+    }
+    //qDebug() << "Time: " << QDateTime::currentDateTime() << "  " << time_notification;
 
 }
 
-void flyNote::setTimeNotification() {
+void flyNote::setTimeNotification(QDateTime date_time) {
+    time_notification = date_time;
+    config.insert("timeNotification", date_time.toString()); // nie bd tego
+    updateConfig();
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(compareTime()));
+    timer->setInterval(1000);
+    timer->setSingleShot(false);
+    timer->start();
 
 }
 
@@ -340,7 +371,8 @@ void flyNote::mousePressEvent(QMouseEvent *event) {
 
     if(event->button() == Qt::LeftButton){
         if (event->pos().x() < 10 || event->pos().x() > width() - 10 ||
-                event->pos().y() < 10 || event->pos().y() > height() - 10) { // resize
+            event->pos().y() < 10 || event->pos().y() > height() - 10) { // resize
+
             start_x = event->pos().x();
             start_y = event->pos().y();
             start_pos = event->globalPos();
@@ -353,7 +385,18 @@ void flyNote::mousePressEvent(QMouseEvent *event) {
     }
 }
 bool flyNote::eventFilter(QObject *obj, QEvent *e) {
-    /* Changing shape of cursor on boundaries */
+    /* Changing shape of cursor on boundaries
+     * and closing panelTime if opened */
+
+    if (e->type() == QEvent::MouseButtonPress) {
+        QMouseEvent* event = static_cast<QMouseEvent*>(e);
+
+        if (event->button() == Qt::LeftButton && panel_opened && event->globalX() > this->pos().x() && event->globalX() < this->pos().x() + width() &&
+            event->globalY() > this->pos().y() && event->globalY() < this->pos().y() + height()) {
+            emit signalclosePanelTime();
+            panel_opened = !panel_opened;
+        }
+    }
 
     if (e->type() == QEvent::MouseMove) {
         QMouseEvent* event = static_cast<QMouseEvent*>(e);
@@ -571,6 +614,5 @@ void flyNote::mouseReleaseEvent(QMouseEvent *event) {
     config.insert("height", height());
     config.insert("x", pos().x());
     config.insert("y", pos().y());
-    config.insert("timeNotification", QDateTime::currentDateTime().toString()); // nie bd tego
     updateConfig();
 }
