@@ -197,6 +197,7 @@ void MainWindow::createNew(QString* path, QString name) {
         connect(this, SIGNAL(signalClose()), fN, SLOT(closeNote()));
         connect(this, SIGNAL(signalSave()), fN, SLOT(saveNote()));
         connect(this, SIGNAL(signalStyle(QString&)), fN, SLOT(switchStyle(QString&)));
+        connect(this, SIGNAL(signalFontChanged(int)), fN, SLOT(updateFontSize(int)));
 
         connect(fN, SIGNAL(signalCreateNew(QString*)), this, SLOT(createNew(QString*)));
         connect(fN, SIGNAL(signalUpdateList()), this, SLOT(files()));
@@ -208,6 +209,7 @@ void MainWindow::createNew(QString* path, QString name) {
         connect(this, SIGNAL(signalSave()), fN, SLOT(saveNote()));
         connect(this, SIGNAL(signalStyle(QString&)), fN, SLOT(switchStyle(QString&)));
         connect(this, SIGNAL(signalFontSize(int)), fN, SLOT(updateFontSize(int)));
+        connect(this, SIGNAL(signalFontChanged(int)), fN, SLOT(updateFontSize(int)));
         connect(this, SIGNAL(signalCloseBeforeDeleting(QString)), fN, SLOT(closeBeforeDeleting(QString)));
 
         connect(fN, SIGNAL(signalCreateNew(QString*)), this, SLOT(createNew(QString*)));
@@ -279,10 +281,10 @@ void MainWindow::increaseFont(){
 
     if (font_size < 35) {
         ++font_size;
+        emit signalFontChanged(font_size);
         ui->listWidget->setFont(QFont("Arial", font_size));
         config.find(QString("font-size")).value() = font_size;
         updateConfig();
-        emit signalFontSize(font_size);
     }
 }
 
@@ -294,7 +296,7 @@ void MainWindow::decreaseFont(){
         ui->listWidget->setFont(QFont("Arial", font_size));
         config.find(QString("font-size")).value() = font_size;
         updateConfig();
-        emit signalFontSize(font_size);
+        emit signalFontChanged(font_size);
     }
 }
 

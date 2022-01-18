@@ -1,5 +1,6 @@
 #include "flynote.h"
 #include "ui_flynote.h"
+#include <QScreen>
 
 flyNote::flyNote(QWidget *parent,  QString name, QString path_, QString style_) : QWidget(parent),  ui(new Ui::flyNote), path(path_) { // heh heh
     ui->setupUi(this, style_);
@@ -11,7 +12,6 @@ flyNote::flyNote(QWidget *parent,  QString name, QString path_, QString style_) 
 
     initConnects();
     loadConfig();
-    compareTime();
 }
 
 flyNote::~flyNote() {
@@ -35,6 +35,7 @@ void flyNote::showPanelTime() {
         PanelInputTime* panel = new PanelInputTime(style, QCursor::pos().x(), QCursor::pos().y(), nullptr);
         connect(this, &flyNote::signalclosePanelTime, panel, [panel](){ panel->close();});
         connect(panel, &PanelInputTime::signalSetNotification, this, &flyNote::setTimeNotification);
+        connect(panel, &PanelInputTime::signalRemoveNotification, this, &flyNote::removeNotification);
         panel_opened = !panel_opened;
     }
     else {
@@ -86,6 +87,18 @@ void flyNote::loadConfig() {
 
     // setting font size
     updateFontSize(font_size);
+
+    // notification
+    if (!name.isEmpty() && !config.find(QString("timeNotification"))->isNull()) {
+        time_notification = QDateTime::fromString(config.find(QString("timeNotification")).value().toString());
+        if(time_notification > QDateTime::currentDateTime() && !notified) {
+            timer = new QTimer(this);
+            connect(timer, SIGNAL(timeout()), this, SLOT(compareTime()));
+            timer->setInterval(1000);
+            timer->setSingleShot(false);
+            timer->start();
+        }
+    }
 }
 
 void flyNote::updateConfig() {
@@ -120,28 +133,42 @@ void flyNote::compareTime() {
     if (date.date() == time_notification.date() &&
         date.time().hour() == time_notification.time().hour() &&
         date.time().minute() == time_notification.time().minute()) {
-        qDebug() << "Notification! Time stop. ";
-        timer->stop();
-        qDebug() << "Timer: " << timer->isActive();
+        sendNotification();
+        delete timer;
     }
-    //qDebug() << "Time: " << QDateTime::currentDateTime() << "  " << time_notification;
-
 }
 
 void flyNote::setTimeNotification(QDateTime date_time) {
     time_notification = date_time;
-    config.insert("timeNotification", date_time.toString()); // nie bd tego
+    notified = false;
+    config.insert("timeNotification", date_time.toString());
     updateConfig();
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(compareTime()));
     timer->setInterval(1000);
     timer->setSingleShot(false);
     timer->start();
-
 }
 
 void flyNote::sendNotification() {
-    qDebug() << "Notification! Time: " << time_notification << " " << QDateTime::currentDateTime();
+    notification = new QMessageBox();
+    notification->setStyleSheet("QLabel { min-width:240 px; font-size: 18px; }");
+    notification->setInformativeText(QString("Notification! It's time! Take care of " + name));
+    QSize size_screen = QGuiApplication::primaryScreen()->size();
+    notification->setGeometry(size_screen.width() - 300, size_screen.height() - 200, 580, 90);
+    connect(notification, &QMessageBox::accepted, this, [this]() { notification->close(); });
+    notification->setWindowFlags(Qt::FramelessWindowHint);
+    notification->setAttribute(Qt::WA_DeleteOnClose, true);
+    notification->show(); // :v
+    notified = true;
+
+}
+
+void flyNote::removeNotification() {
+    notified = true;
+    delete timer;
+    config.insert("timeNotification", "");
+    updateConfig();
 }
 
 void flyNote::loadNote() {
@@ -278,6 +305,8 @@ bool flyNote::saveNote() {
         if (note.exists()){
             note.open(QIODevice::WriteOnly | QIODevice::Text);
             QTextStream out(&note);
+            out.setGenerateByteOrderMark(true);
+            out.setCodec("UTF-8");
             out << ui->text_space->toPlainText();
             note.close();
         }
@@ -294,6 +323,8 @@ bool flyNote::saveNote() {
         QFile note(path);
         note.open(QIODevice::WriteOnly | QIODevice::Text);
         QTextStream out(&note);
+        out.setGenerateByteOrderMark(true);
+        out.setCodec("UTF-8");
         out << ui->text_space->toPlainText();
         note.close();
 

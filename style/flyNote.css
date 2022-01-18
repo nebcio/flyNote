@@ -1,5 +1,5 @@
 QTextEdit, QMessageBox, QLabel, QWidget, QListWidget{
-    background: #202021;
+    background: #090d13;
     color: #999;
  }
 
@@ -82,7 +82,7 @@ QCheckBox::indicator {
  }
 
 QPushButton {
-    background: #333;
+    background: #131c29;
     margin: 1px;
  }
 

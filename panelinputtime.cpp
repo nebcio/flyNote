@@ -23,6 +23,7 @@ PanelInputTime::PanelInputTime(QString style, int x, int y, QWidget *parent) : Q
 
     m_time_input = new QTimeEdit(this); {
     m_time_input->setGeometry(60, 160, 60, 30);
+    m_time_input->setTime(QTime::currentTime());
     connect(m_time_input, &QTimeEdit::timeChanged, this, &PanelInputTime::takeDateTime);
     }
 

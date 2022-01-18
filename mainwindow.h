@@ -20,8 +20,6 @@ private:
     const QShortcut *saving_shortcut = new QShortcut(QKeySequence::Save, this, SLOT(saveOpened()));
     const QShortcut *increase_shortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Equal), this, SLOT(increaseFont()));
     const QShortcut *decrease_shortcut = new QShortcut(QKeySequence::ZoomOut, this, SLOT(decreaseFont()));
-    QVector<flyNote*> children_window;
-    QVector<QListWidgetItem*> selected_files;
 
     QJsonObject names_files;
     QJsonObject config;
@@ -63,7 +61,7 @@ signals:
     void signalSave();
     void signalStyle(QString& style);
     void signalCloseApp();
-    void signalFontSize(int f);
+    void signalFontChanged(int f);
     void signalCloseBeforeDeleting(QString path);
 
 public:

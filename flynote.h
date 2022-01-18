@@ -16,6 +16,7 @@
 #include <QDateTime>
 #include <QCursor>
 #include <QTimer>
+#include <QMessageBox>
 #include "askerwindow.h"
 #include "panelinputtime.h"
 
@@ -45,7 +46,9 @@ private:
 
     QDateTime time_notification;
     bool panel_opened = false;
+    bool notified;
     QTimer* timer;
+    QMessageBox* notification;
 
     AskerWindow* m_ask_for_save;
 
@@ -76,6 +79,7 @@ private slots:
     void compareTime();
     void setTimeNotification(QDateTime date_time);
     void sendNotification();
+    void removeNotification();
 
     void loadConfig();
     void updateConfig();
