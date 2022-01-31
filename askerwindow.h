@@ -26,7 +26,6 @@ private:
     QPushButton* m_save_note;
     QFrame* m_frame;
 
-
 };
 
 #endif // ASKERWINDOW_H

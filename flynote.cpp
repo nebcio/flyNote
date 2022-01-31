@@ -32,7 +32,7 @@ void flyNote::initConnects(){
 
 void flyNote::showPanelTime() {
     if (!panel_opened) {
-        PanelInputTime* panel = new PanelInputTime(style, QCursor::pos().x(), QCursor::pos().y(), nullptr);
+        PanelInputTime* panel = new PanelInputTime(style, QCursor::pos().x(), QCursor::pos().y());
         connect(this, &flyNote::signalclosePanelTime, panel, [panel](){ panel->close();});
         connect(panel, &PanelInputTime::signalSetNotification, this, &flyNote::setTimeNotification);
         connect(panel, &PanelInputTime::signalRemoveNotification, this, &flyNote::removeNotification);
@@ -155,7 +155,7 @@ void flyNote::sendNotification() {
     notification->setStyleSheet("QLabel { min-width:240 px; font-size: 18px; }");
     notification->setInformativeText(QString("Notification! It's time! Take care of " + name));
     QSize size_screen = QGuiApplication::primaryScreen()->size();
-    notification->setGeometry(size_screen.width() - 300, size_screen.height() - 200, 580, 90);
+    notification->setGeometry(300, 30, 580, 90); // size_screen.width() - ; size_screen.height() -
     connect(notification, &QMessageBox::accepted, this, [this]() { notification->close(); });
     notification->setWindowFlags(Qt::FramelessWindowHint);
     notification->setAttribute(Qt::WA_DeleteOnClose, true);
@@ -281,17 +281,18 @@ void flyNote::opacitySet(int a) {
 void flyNote::askToSave() {
     /* Create new window, connects two events
        save and close or close */
+    if (m_ask_for_save == nullptr) {
+        m_ask_for_save = new AskerWindow(nullptr, style);
 
-    m_ask_for_save = new AskerWindow(nullptr, style);
+        connect(m_ask_for_save, &AskerWindow::signalSave, [this]() {
+            saveNote();
+            close();
+        });
 
-    connect(m_ask_for_save, &AskerWindow::signalSave, [this]() {
-        saveNote();
-        close();
-    });
-
-    connect(m_ask_for_save, &AskerWindow::signalQuit, [this](){
-        close();
-    });
+        connect(m_ask_for_save, &AskerWindow::signalQuit, [this](){
+            close();
+        });
+    }
 }
 
 bool flyNote::saveNote() {

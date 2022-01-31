@@ -50,7 +50,7 @@ private:
     QTimer* timer;
     QMessageBox* notification;
 
-    AskerWindow* m_ask_for_save;
+    AskerWindow* m_ask_for_save = nullptr;
 
 
 public:

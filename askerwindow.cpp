@@ -27,7 +27,7 @@ AskerWindow::AskerWindow(QWidget *parent, QString style) : QWidget(parent) {
     connect(m_just_quit, &QPushButton::clicked, this, &AskerWindow::closeParent);
 
     setAttribute(Qt::WA_DeleteOnClose);
-    setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
+    setWindowFlags(windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     show();
 }
 

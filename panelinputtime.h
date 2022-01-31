@@ -9,12 +9,13 @@
 #include <QPushButton>
 #include <QString>
 #include <QDate>
+#include <QDateTime>
 
 class PanelInputTime : public QWidget
 {
     Q_OBJECT
 public:
-    explicit PanelInputTime(QString style="blue", int x = 900, int y = 400, QWidget *parent = nullptr);
+    explicit PanelInputTime(QString style="blue", int x = 900, int y = 400, QDateTime time_notification = QDateTime::currentDateTime(), QWidget *parent = nullptr);
 
 signals:
     void signalRemoveNotification();
@@ -22,7 +23,6 @@ signals:
 
 private slots:
     void takeDateTime();
-    void loadNotificationTime();
 
 private:
     QCalendarWidget* m_calendar;

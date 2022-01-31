@@ -1,6 +1,6 @@
 #include "panelinputtime.h"
 
-PanelInputTime::PanelInputTime(QString style, int x, int y, QWidget *parent) : QWidget(parent) {
+PanelInputTime::PanelInputTime(QString style, int x, int y, QDateTime time_notification, QWidget *parent) : QWidget(parent) {
 
     this->setGeometry(x, y, 300, 200);
     m_frame = new QFrame(this);{
@@ -13,7 +13,7 @@ PanelInputTime::PanelInputTime(QString style, int x, int y, QWidget *parent) : Q
     m_calendar->setProperty("style", style);
     m_calendar->setGridVisible(false);
     m_calendar->setSelectionMode(QCalendarWidget::SingleSelection);
-    m_calendar->setMinimumDate(QDate::currentDate());}
+    m_calendar->setMinimumDate(time_notification.date());}
     connect(m_calendar, &QCalendarWidget::selectionChanged, this, &PanelInputTime::takeDateTime);
 
     m_time_describe = new QLabel(this); {
@@ -23,9 +23,9 @@ PanelInputTime::PanelInputTime(QString style, int x, int y, QWidget *parent) : Q
 
     m_time_input = new QTimeEdit(this); {
     m_time_input->setGeometry(60, 160, 60, 30);
-    m_time_input->setTime(QTime::currentTime());
+    m_time_input->setTime(time_notification.time());}
     connect(m_time_input, &QTimeEdit::timeChanged, this, &PanelInputTime::takeDateTime);
-    }
+
 
     m_remove_notification = new QPushButton(this);{
     m_remove_notification->setGeometry(240, 160, 50, 30);
@@ -47,6 +47,3 @@ void PanelInputTime::takeDateTime() {
     emit signalSetNotification(date_time);
 }
 
-void PanelInputTime::loadNotificationTime() {
-
-}
